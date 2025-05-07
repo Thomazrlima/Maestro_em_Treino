@@ -1,8 +1,5 @@
 import numpy as np
 import math
-import pathlib
-import sys
-
 from core.base import Base
 from core_ext.camera import Camera
 from core_ext.mesh import Mesh
@@ -14,7 +11,6 @@ from extras.movement_rig import MovementRig
 from material.surface import SurfaceMaterial
 from core.obj_reader import my_obj_reader  
 from core.customGeometry import customGeometry  
-from core.matrix import Matrix
 
 class Example(Base):
     def initialize(self):
@@ -32,9 +28,8 @@ class Example(Base):
         self.rig = MovementRig()
         self.rig.add(self.mesh)
         
-        self.current_position = [0, 0.5, -0.5]
-        self.rig.set_position(self.current_position)
-
+        self.rig.set_position([0, 0.5, -0.5])
+        
         self.scene.add(self.rig)
         self.scene.add(AxesHelper(axis_length=2))
         
@@ -42,48 +37,58 @@ class Example(Base):
         grid.rotate_x(-math.pi / 2)
         self.scene.add(grid)
 
-        self.movement_phase = 0
-        self.movement_queue = []
-        self.move_speed = 2.5
-        self.target_x = None
+        self.animation_active = False
+        self.animation_start_time = 0
+        self.animation_duration = 4.0
+        self.animation_speed = 2.5 
+        self.animation_start_position = [0, 0, 0]
+        self.movement_offsets = [1.5, -3.0, 1.5]
 
-    def start_movement_sequence(self):
-        self.movement_queue = [1.5, -3.0, 1.5]
-        self.target_x = self.current_position[0] + self.movement_queue[0]
-        self.movement_phase = 1
+    def start_animation(self):
+        self.animation_start_position = self.rig.get_position()
+        self.animation_active = True
+        self.animation_start_time = self.time
+        print(f"Animation started from position: {self.animation_start_position}")
 
-    def execute_movement(self):
-        if self.target_x is None or self.movement_phase == 0:
+    def update_animation(self, delta_time):
+        if not self.animation_active:
             return
 
-        current_x = self.current_position[0]
-        new_x = self.approach(current_x, self.target_x, self.move_speed * self.delta_time)
-        self.current_position[0] = new_x
-        self.rig.set_position(self.current_position)
+        elapsed = (self.time - self.animation_start_time) * self.animation_speed
+        
+        if elapsed > self.animation_duration:
+            self.animation_active = False
+            self.rig.set_position(self.animation_start_position)
+            print("Animation completed")
+            return
 
-        if abs(new_x - self.target_x) < 0.01:
-            if self.movement_phase < len(self.movement_queue):
-                self.movement_phase += 1
-                self.target_x = self.target_x + self.movement_queue[self.movement_phase - 1]
-            else:
-                self.movement_phase = 0
-                self.target_x = None
-
-    def approach(self, current, target, delta):
-        if current < target:
-            return min(current + delta, target)
+        progress = elapsed / self.animation_duration
+        
+        if progress < 0.33:
+            phase_progress = progress / 0.33
+            movement = self.movement_offsets[0] * phase_progress
+        elif progress < 0.66:
+            phase_progress = (progress - 0.33) / 0.33
+            movement = self.movement_offsets[0] + self.movement_offsets[1] * phase_progress
         else:
-            return max(current - delta, target)
+            phase_progress = (progress - 0.66) / 0.34
+            movement = self.movement_offsets[0] + self.movement_offsets[1] + self.movement_offsets[2] * phase_progress
+        
+        new_position = [
+            self.animation_start_position[0] + movement,
+            self.animation_start_position[1],
+            self.animation_start_position[2]
+        ]
+        
+        self.rig.set_position(new_position)
 
     def update(self):
         self.rig.update(self.input, self.delta_time)
 
-        if self.input.is_key_pressed('x') and self.movement_phase == 0:
-            self.start_movement_sequence()
+        if self.input.is_key_pressed('x') and not self.animation_active:
+            self.start_animation()
 
-        if self.movement_phase > 0:
-            self.execute_movement()
-
+        self.update_animation(self.delta_time)
         self.renderer.render(self.scene, self.camera)
 
 Example(screen_size=[800, 600]).run()

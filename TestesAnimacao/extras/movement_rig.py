@@ -1,7 +1,5 @@
 import math
-
 from core_ext.object3d import Object3D
-
 
 class MovementRig(Object3D):
     """
@@ -33,6 +31,11 @@ class MovementRig(Object3D):
         self.KEY_TURN_RIGHT = "e"
         self.KEY_LOOK_UP = "t"
         self.KEY_LOOK_DOWN = "g"
+
+    def get_position(self):
+        """Returns the current position as a list [x, y, z]"""
+        # The position is stored in the last column of the transformation matrix
+        return list(self.local_matrix[0:3, 3])
 
     # Adding and removing objects applies to look attachment.
     # Override functions from the Object3D class.
@@ -68,3 +71,4 @@ class MovementRig(Object3D):
             self._look_attachment.rotate_x(rotate_amount)
         if input_object.is_key_pressed(self.KEY_LOOK_DOWN):
             self._look_attachment.rotate_x(-rotate_amount)
+            
