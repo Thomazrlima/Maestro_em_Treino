@@ -32,6 +32,14 @@ class MovementRig(Object3D):
         self.KEY_LOOK_UP = "t"
         self.KEY_LOOK_DOWN = "g"
 
+        self._movement_enabled = True
+
+    def disable_movement(self):
+        self._movement_enabled = False
+
+    def enable_movement(self):
+        self._movement_enabled = True
+
     def get_position(self):
         """Returns the current position as a list [x, y, z]"""
         # The position is stored in the last column of the transformation matrix
@@ -51,24 +59,25 @@ class MovementRig(Object3D):
     def update(self, input_object, delta_time):
         move_amount = self._units_per_second * delta_time
         rotate_amount = self._degrees_per_second * (math.pi / 180) * delta_time
-        if input_object.is_key_pressed(self.KEY_MOVE_FORWARDS):
-            self.translate(0, 0, -move_amount)
-        if input_object.is_key_pressed(self.KEY_MOVE_BACKWARDS):
-            self.translate(0, 0, move_amount)
-        if input_object.is_key_pressed(self.KEY_MOVE_LEFT):
-            self.translate(-move_amount, 0, 0)
-        if input_object.is_key_pressed(self.KEY_MOVE_RIGHT):
-            self.translate(move_amount, 0, 0)
-        if input_object.is_key_pressed(self.KEY_MOVE_UP):
-            self.translate(0, move_amount, 0)
-        if input_object.is_key_pressed(self.KEY_MOVE_DOWN):
-            self.translate(0, -move_amount, 0)
-        if input_object.is_key_pressed(self.KEY_TURN_RIGHT):
-            self.rotate_y(-rotate_amount)
-        if input_object.is_key_pressed(self.KEY_TURN_LEFT):
-            self.rotate_y(rotate_amount)
-        if input_object.is_key_pressed(self.KEY_LOOK_UP):
-            self._look_attachment.rotate_x(rotate_amount)
-        if input_object.is_key_pressed(self.KEY_LOOK_DOWN):
-            self._look_attachment.rotate_x(-rotate_amount)
-            
+        if self._movement_enabled:
+            if input_object.is_key_pressed(self.KEY_MOVE_FORWARDS):
+                self.translate(0, 0, -move_amount)
+            if input_object.is_key_pressed(self.KEY_MOVE_BACKWARDS):
+                self.translate(0, 0, move_amount)
+            if input_object.is_key_pressed(self.KEY_MOVE_LEFT):
+                self.translate(-move_amount, 0, 0)
+            if input_object.is_key_pressed(self.KEY_MOVE_RIGHT):
+                self.translate(move_amount, 0, 0)
+            if input_object.is_key_pressed(self.KEY_MOVE_UP):
+                self.translate(0, move_amount, 0)
+            if input_object.is_key_pressed(self.KEY_MOVE_DOWN):
+                self.translate(0, -move_amount, 0)
+            if input_object.is_key_pressed(self.KEY_TURN_RIGHT):
+                self.rotate_y(-rotate_amount)
+            if input_object.is_key_pressed(self.KEY_TURN_LEFT):
+                self.rotate_y(rotate_amount)
+            if input_object.is_key_pressed(self.KEY_LOOK_UP):
+                self._look_attachment.rotate_x(rotate_amount)
+            if input_object.is_key_pressed(self.KEY_LOOK_DOWN):
+                self._look_attachment.rotate_x(-rotate_amount)
+                

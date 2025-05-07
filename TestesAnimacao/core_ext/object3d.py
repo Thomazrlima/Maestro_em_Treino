@@ -115,3 +115,5 @@ class Object3D:
         self._matrix[1, 3] = position[1]
         self._matrix[2, 3] = position[2]
 
+    def look_at(self, target_position):
+        self._matrix = Matrix.make_look_at(self.global_position, target_position)
