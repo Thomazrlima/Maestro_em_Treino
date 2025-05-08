@@ -38,20 +38,36 @@ class Example(Base):
         self.scene.add(grid)
 
         self.animation_active = False
+        self.current_animation = None
         self.animation_start_time = 0
-        self.animation_duration = 4.0
+        self.animation_duration = 2.0
         self.animation_speed = 2.5 
-        self.animation_start_position = [0, 0, 0]
-        self.movement_offsets = [1.5, -3.0, 1.5]
+        self.animation_start_position = [0, 0.5, -0.5]
+        
+        self.animations = {
+            'q': {'direction': [1.0, 0.0, 0.0], 'intensity': 1.5},
+            'w': {'direction': [-1.0, 0.0, 0.0], 'intensity': 1.0},
+            'e': {'direction': [0.0, 1.0, 0.0], 'intensity': 0.8},
+            'r': {'direction': [0.0, -1.0, 0.0], 'intensity': 0.5},
+            't': {'direction': [0.0, 0.0, 1.0], 'intensity': 1.2},
+            'y': {'direction': [0.0, 0.0, -1.0], 'intensity': 1.0},
+            'u': {'direction': [1.0, 1.0, 0.0], 'intensity': 0.7},
+            'i': {'direction': [-1.0, 1.0, 0.0], 'intensity': 0.9},
+            'o': {'direction': [0.5, 0.0, 0.5], 'intensity': 1.1},
+            'p': {'direction': [-0.5, 0.0, -0.5], 'intensity': 1.3},
+            '[': {'direction': [0.0, 0.5, 0.5], 'intensity': 0.6}
+        }
 
-    def start_animation(self):
-        self.animation_start_position = self.rig.get_position()
-        self.animation_active = True
-        self.animation_start_time = self.time
-        print(f"Animation started from position: {self.animation_start_position}")
+    def start_animation(self, key):
+        if key in self.animations:
+            self.animation_start_position = self.rig.get_position()
+            self.animation_active = True
+            self.current_animation = key
+            self.animation_start_time = self.time
+            print(f"Animation {key} started")
 
     def update_animation(self, delta_time):
-        if not self.animation_active:
+        if not self.animation_active or not self.current_animation:
             return
 
         elapsed = (self.time - self.animation_start_time) * self.animation_speed
@@ -59,25 +75,27 @@ class Example(Base):
         if elapsed > self.animation_duration:
             self.animation_active = False
             self.rig.set_position(self.animation_start_position)
-            print("Animation completed")
+            print(f"Animation {self.current_animation} completed")
             return
 
         progress = elapsed / self.animation_duration
         
-        if progress < 0.33:
-            phase_progress = progress / 0.33
-            movement = self.movement_offsets[0] * phase_progress
-        elif progress < 0.66:
-            phase_progress = (progress - 0.33) / 0.33
-            movement = self.movement_offsets[0] + self.movement_offsets[1] * phase_progress
-        else:
-            phase_progress = (progress - 0.66) / 0.34
-            movement = self.movement_offsets[0] + self.movement_offsets[1] + self.movement_offsets[2] * phase_progress
+        movement_progress = math.sin(progress * math.pi)
+        
+        anim_params = self.animations[self.current_animation]
+        direction = anim_params['direction']
+        intensity = anim_params['intensity']
+
+        displacement = [
+            direction[0] * intensity * movement_progress,
+            direction[1] * intensity * movement_progress,
+            direction[2] * intensity * movement_progress
+        ]
         
         new_position = [
-            self.animation_start_position[0] + movement,
-            self.animation_start_position[1],
-            self.animation_start_position[2]
+            self.animation_start_position[0] + displacement[0],
+            self.animation_start_position[1] + displacement[1],
+            self.animation_start_position[2] + displacement[2]
         ]
         
         self.rig.set_position(new_position)
@@ -85,8 +103,9 @@ class Example(Base):
     def update(self):
         self.rig.update(self.input, self.delta_time)
 
-        if self.input.is_key_pressed('x') and not self.animation_active:
-            self.start_animation()
+        for key in self.animations:
+            if self.input.is_key_pressed(key) and not self.animation_active:
+                self.start_animation(key)
 
         self.update_animation(self.delta_time)
         self.renderer.render(self.scene, self.camera)
