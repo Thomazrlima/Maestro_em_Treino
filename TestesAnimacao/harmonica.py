@@ -49,13 +49,13 @@ class Example(Base):
             'w': {'direction': [-1.0, 0.0, 0.0], 'intensity': 1.0},
             'e': {'direction': [0.0, 1.0, 0.0], 'intensity': 0.8},
             'r': {'direction': [0.0, -1.0, 0.0], 'intensity': 0.5},
-            't': {'direction': [0.0, 0.0, 1.0], 'intensity': 1.2},
-            'y': {'direction': [0.0, 0.0, -1.0], 'intensity': 1.0},
-            'u': {'direction': [1.0, 1.0, 0.0], 'intensity': 0.7},
-            'i': {'direction': [-1.0, 1.0, 0.0], 'intensity': 0.9},
-            'o': {'direction': [0.5, 0.0, 0.5], 'intensity': 1.1},
-            'p': {'direction': [-0.5, 0.0, -0.5], 'intensity': 1.3},
-            '[': {'direction': [0.0, 0.5, 0.5], 'intensity': 0.6}
+            't': {'direction': [-0.1, 0.5, 0.0], 'intensity': 1.6},
+            'y': {'direction': [-0.2, 0.3, 0.0], 'intensity': 1.4},
+            'u': {'direction': [-0.3, 0.2, 0.0], 'intensity': 1.0},
+            'i': {'direction': [-0.3, 0.4, 0.0], 'intensity': 1.7},
+            'o': {'direction': [0.5, -0.5, 0.0], 'intensity': 1.1},
+            'p': {'direction': [-0.5, 0.5, 0.0], 'intensity': 1.3},
+            '[': {'direction': [0.7, 0.3, 0.0], 'intensity': 0.6}
         }
 
     def start_animation(self, key):
@@ -89,13 +89,13 @@ class Example(Base):
         displacement = [
             direction[0] * intensity * movement_progress,
             direction[1] * intensity * movement_progress,
-            direction[2] * intensity * movement_progress
+            0
         ]
         
         new_position = [
             self.animation_start_position[0] + displacement[0],
             self.animation_start_position[1] + displacement[1],
-            self.animation_start_position[2] + displacement[2]
+            self.animation_start_position[2]
         ]
         
         self.rig.set_position(new_position)
