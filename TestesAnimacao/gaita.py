@@ -26,7 +26,7 @@ class Example(Base):
         self.corpo_mesh = Mesh(corpo_geometry, corpo_material)
 
         tecido_geometry = customGeometry(1, 1, 1, my_obj_reader('tecido_gaita.obj'))
-        tecido_material = SurfaceMaterial(property_dict={"useVertexColors": True})
+        tecido_material = SurfaceMaterial(property_dict={"useVertexColors": True, "doubleSide": True})
         self.tecido_mesh = Mesh(tecido_geometry, tecido_material)
 
         self.rig = MovementRig()
@@ -72,7 +72,7 @@ class Example(Base):
 
         progress = elapsed / self.animation_duration
         
-        scale_factor = 0.5 + 1.5 * abs(math.sin(progress * math.pi * 2))
+        scale_factor = 0.95 + 0.05 * abs(math.sin(progress * math.pi * 2))
         self.tecido_mesh.set_scale([scale_factor, scale_factor, scale_factor])
         print(f"Current scale: {scale_factor:.2f}")
 
