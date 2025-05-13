@@ -21,7 +21,6 @@ class Example(Base):
         self.camera = Camera(aspect_ratio=800/600)
         self.camera.set_position([0.5, 1, 5])
         
-        # Carrega e centraliza o tecido na origem
         tecido_vertices = my_obj_reader('tecido_gaita.obj')
         tecido_vertices_array = np.array(tecido_vertices)
         tecido_center = np.mean(tecido_vertices_array, axis=0)
@@ -30,8 +29,7 @@ class Example(Base):
         tecido_geometry = customGeometry(1, 1, 1, centered_tecido_vertices)
         tecido_material = SurfaceMaterial(property_dict={"useVertexColors": True, "doubleSide": True})
         self.tecido_mesh = Mesh(tecido_geometry, tecido_material)
-        
-        # Carrega e ajusta os outros objetos relativos ao tecido
+
         corpo_vertices = my_obj_reader('corpo_gaita.obj')
         corpo_vertices_array = np.array(corpo_vertices)
         centered_corpo_vertices = (corpo_vertices_array - tecido_center).tolist()
@@ -49,32 +47,27 @@ class Example(Base):
         self.tubo_inferior_rotation = 0
         self.max_pendulum_angle = math.pi / 64
 
-        # Cria um grupo principal centralizado no tecido
         self.main_group = Mesh(None, None)
         self.main_group.add(self.corpo_mesh)
         self.main_group.add(self.tecido_mesh)
         self.main_group.add(self.tubo_inferior_mesh)
         
-        # Configura o rig de movimento
         self.rig = MovementRig()
         self.rig.add(self.main_group)
         self.rig.set_position([0, 0.5, -0.5])
         self.scene.add(self.rig)
         
-        # Adiciona helpers
         self.scene.add(AxesHelper(axis_length=2))
         grid = GridHelper(size=20, grid_color=[1, 1, 1], center_color=[1, 1, 0])
         grid.rotate_x(-math.pi / 2)
         self.scene.add(grid)
 
-        # Configuração da animação
         self.animation_active = False
         self.current_animation = None
         self.animation_start_time = 0
         self.animation_duration = 3.0
         self.animation_speed = 1.5
         
-        # Estado inicial
         self.tecido_mesh.set_scale([1.0, 1.0, 1.0])
         
         self.animations = {
@@ -108,15 +101,12 @@ class Example(Base):
 
         progress = elapsed / self.animation_duration
         
-        # Animação sincronizada
         pendulum_factor = self.smooth_movement(progress)
         
-        # Animação do tecido: 1.0 → 0.95 → 1.05 → 1.0
         scale_factor = 1.0 + 0.05 * math.sin(progress * math.pi * 2)
         
         self.tecido_mesh.set_scale([scale_factor, scale_factor, scale_factor])
         
-        # Animação do pêndulo
         self.tubo_inferior_rotation = pendulum_factor * self.max_pendulum_angle
         self.tubo_inferior_mesh.set_rotation([0, 0, self.tubo_inferior_rotation])
         
