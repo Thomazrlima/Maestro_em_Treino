@@ -21,40 +21,61 @@ class Example(Base):
         self.camera = Camera(aspect_ratio=800/600)
         self.camera.set_position([0.5, 1, 5])
         
-        corpo_geometry = customGeometry(1, 1, 1, my_obj_reader('corpo_gaita.obj'))
-        corpo_material = SurfaceMaterial(property_dict={"useVertexColors": True})
-        self.corpo_mesh = Mesh(corpo_geometry, corpo_material)
-
-        tecido_geometry = customGeometry(1, 1, 1, my_obj_reader('tecido_gaita.obj'))
+        # Carrega e centraliza o tecido na origem
+        tecido_vertices = my_obj_reader('tecido_gaita.obj')
+        tecido_vertices_array = np.array(tecido_vertices)
+        tecido_center = np.mean(tecido_vertices_array, axis=0)
+        centered_tecido_vertices = (tecido_vertices_array - tecido_center).tolist()
+        
+        tecido_geometry = customGeometry(1, 1, 1, centered_tecido_vertices)
         tecido_material = SurfaceMaterial(property_dict={"useVertexColors": True, "doubleSide": True})
         self.tecido_mesh = Mesh(tecido_geometry, tecido_material)
         
-        tubo_inferior_geometry = customGeometry(1, 1, 1, my_obj_reader('tubo_inferior.obj'))
+        # Carrega e ajusta os outros objetos relativos ao tecido
+        corpo_vertices = my_obj_reader('corpo_gaita.obj')
+        corpo_vertices_array = np.array(corpo_vertices)
+        centered_corpo_vertices = (corpo_vertices_array - tecido_center).tolist()
+        corpo_geometry = customGeometry(1, 1, 1, centered_corpo_vertices)
+        corpo_material = SurfaceMaterial(property_dict={"useVertexColors": True})
+        self.corpo_mesh = Mesh(corpo_geometry, corpo_material)
+
+        tubo_inferior_vertices = my_obj_reader('tubo_inferior.obj')
+        tubo_vertices_array = np.array(tubo_inferior_vertices)
+        centered_tubo_vertices = (tubo_vertices_array - tecido_center).tolist()
+        tubo_inferior_geometry = customGeometry(1, 1, 1, centered_tubo_vertices)
         tubo_inferior_material = SurfaceMaterial(property_dict={"useVertexColors": True})
         self.tubo_inferior_mesh = Mesh(tubo_inferior_geometry, tubo_inferior_material)
         
-        self.tubo_inferior_mesh.set_position([0, 0, 0])
         self.tubo_inferior_rotation = 0
-        self.max_pendulum_angle = math.pi / 32
+        self.max_pendulum_angle = math.pi / 64
 
-        self.rig = MovementRig()
-        self.rig.add(self.corpo_mesh)
-        self.rig.add(self.tecido_mesh)
-        self.rig.add(self.tubo_inferior_mesh)
+        # Cria um grupo principal centralizado no tecido
+        self.main_group = Mesh(None, None)
+        self.main_group.add(self.corpo_mesh)
+        self.main_group.add(self.tecido_mesh)
+        self.main_group.add(self.tubo_inferior_mesh)
         
+        # Configura o rig de movimento
+        self.rig = MovementRig()
+        self.rig.add(self.main_group)
         self.rig.set_position([0, 0.5, -0.5])
         self.scene.add(self.rig)
-        self.scene.add(AxesHelper(axis_length=2))
         
+        # Adiciona helpers
+        self.scene.add(AxesHelper(axis_length=2))
         grid = GridHelper(size=20, grid_color=[1, 1, 1], center_color=[1, 1, 0])
         grid.rotate_x(-math.pi / 2)
         self.scene.add(grid)
 
+        # Configuração da animação
         self.animation_active = False
         self.current_animation = None
         self.animation_start_time = 0
         self.animation_duration = 3.0
         self.animation_speed = 1.5
+        
+        # Estado inicial
+        self.tecido_mesh.set_scale([1.0, 1.0, 1.0])
         
         self.animations = {
             'm': {'type': 'inflate'}
@@ -87,16 +108,19 @@ class Example(Base):
 
         progress = elapsed / self.animation_duration
         
-        # Tecido
-        scale_factor = 0.95 + 0.05 * abs(math.sin(progress * math.pi * 2))
+        # Animação sincronizada
+        pendulum_factor = self.smooth_movement(progress)
+        
+        # Animação do tecido: 1.0 → 0.95 → 1.05 → 1.0
+        scale_factor = 1.0 + 0.05 * math.sin(progress * math.pi * 2)
+        
         self.tecido_mesh.set_scale([scale_factor, scale_factor, scale_factor])
         
-        # Tubo Inferior
-        pendulum_factor = self.smooth_movement(progress)
+        # Animação do pêndulo
         self.tubo_inferior_rotation = pendulum_factor * self.max_pendulum_angle
         self.tubo_inferior_mesh.set_rotation([0, 0, self.tubo_inferior_rotation])
         
-        print(f"Current scale: {scale_factor:.2f}, Pendulum angle: {math.degrees(self.tubo_inferior_rotation):.1f}°")
+        print(f"Current scale: {scale_factor:.3f}, Pendulum angle: {math.degrees(self.tubo_inferior_rotation):.1f}°")
 
     def update(self):
         self.rig.update(self.input, self.delta_time)
