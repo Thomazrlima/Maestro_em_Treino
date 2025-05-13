@@ -87,11 +87,11 @@ class Example(Base):
 
         progress = elapsed / self.animation_duration
         
-        # Animação do tecido (mantida igual)
+        # Tecido
         scale_factor = 0.95 + 0.05 * abs(math.sin(progress * math.pi * 2))
         self.tecido_mesh.set_scale([scale_factor, scale_factor, scale_factor])
         
-        # Animação suavizada do tubo inferior (única modificação)
+        # Tubo Inferior
         pendulum_factor = self.smooth_movement(progress)
         self.tubo_inferior_rotation = pendulum_factor * self.max_pendulum_angle
         self.tubo_inferior_mesh.set_rotation([0, 0, self.tubo_inferior_rotation])
