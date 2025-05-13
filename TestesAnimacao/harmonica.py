@@ -40,22 +40,22 @@ class Example(Base):
         self.animation_active = False
         self.current_animation = None
         self.animation_start_time = 0
-        self.animation_duration = 2.0
-        self.animation_speed = 2.5 
+        self.animation_duration = 1.0
+        self.animation_speed = 1.0 
         self.animation_start_position = [0, 0.5, -0.5]
         
         self.animations = {
-            'q': {'direction': [1.0, 0.0, 0.0], 'intensity': 1.5},
+            'q': {'direction': [1.0, 0.0, 0.0], 'intensity': 1.0}, 
             'w': {'direction': [-1.0, 0.0, 0.0], 'intensity': 1.0},
-            'e': {'direction': [0.0, 1.0, 0.0], 'intensity': 0.8},
-            'r': {'direction': [0.0, -1.0, 0.0], 'intensity': 0.5},
-            't': {'direction': [-0.1, 0.5, 0.0], 'intensity': 1.6},
-            'y': {'direction': [-0.2, 0.3, 0.0], 'intensity': 1.4},
-            'u': {'direction': [-0.3, 0.2, 0.0], 'intensity': 1.0},
-            'i': {'direction': [-0.3, 0.4, 0.0], 'intensity': 1.7},
-            'o': {'direction': [0.5, -0.5, 0.0], 'intensity': 1.1},
-            'p': {'direction': [-0.5, 0.5, 0.0], 'intensity': 1.3},
-            '[': {'direction': [0.7, 0.3, 0.0], 'intensity': 0.6}
+            'e': {'direction': [1.0, 0.0, 0.0], 'intensity': 0.8, 'oscillate': True},
+            'r': {'direction': [-1.0, 0.0, 0.0], 'intensity': 0.8, 'oscillate': True},
+            't': {'direction': [-1.0, 0.1, 0.0], 'intensity': 0.8},
+            'y': {'direction': [1.0, 0.05, 0.0], 'intensity': 1.2},
+            'u': {'direction': [-1.0, 0.05, 0.0], 'intensity': 1.2},
+            'i': {'direction': [1.0, 0.0, 0.0], 'intensity': 0.6},
+            'o': {'direction': [-1.0, 0.0, 0.0], 'intensity': 0.6},
+            'p': {'direction': [1.0, 0.05, 0.0], 'intensity': 0.8},
+            '[': {'direction': [-1.0, 0.1, 0.0], 'intensity': 1.3}
         }
 
     def start_animation(self, key):
@@ -80,12 +80,15 @@ class Example(Base):
 
         progress = elapsed / self.animation_duration
         
-        movement_progress = math.sin(progress * math.pi)
-        
         anim_params = self.animations[self.current_animation]
         direction = anim_params['direction']
         intensity = anim_params['intensity']
-
+        
+        if anim_params.get('oscillate', False):
+            movement_progress = math.sin(progress * 2 * math.pi)
+        else:
+            movement_progress = math.sin(progress * math.pi)
+        
         displacement = [
             direction[0] * intensity * movement_progress,
             direction[1] * intensity * movement_progress,

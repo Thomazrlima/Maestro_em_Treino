@@ -68,16 +68,8 @@ class Example(Base):
             print("\n--- Starting inflation animation ---")
 
     def smooth_movement(self, t):
-        """Função para suavizar o movimento pendular (mantida como você tinha)"""
+        """Função para suavizar o movimento pendular"""
         return math.sin(t * math.pi * 2) * (1 - math.exp(-5 * t)) * math.exp(-0.5 * t)
-
-    def smooth_scale(self, progress):
-        """Nova função para suavizar especificamente a animação do tecido"""
-        if progress < 0.8:
-            return 0.95 + 0.05 * abs(math.sin(progress * math.pi * 2))
-        else:
-            fade_progress = (progress - 0.8) / 0.2
-            return 0.95 + 0.05 * (1 - fade_progress) * abs(math.sin(progress * math.pi * 2))
 
     def update_animation(self, delta_time):
         if not self.animation_active or not self.current_animation:
@@ -95,10 +87,11 @@ class Example(Base):
 
         progress = elapsed / self.animation_duration
         
-        scale_factor = self.smooth_scale(progress)
+        # Animação do tecido (mantida igual)
+        scale_factor = 0.95 + 0.05 * abs(math.sin(progress * math.pi * 2))
         self.tecido_mesh.set_scale([scale_factor, scale_factor, scale_factor])
         
-        # Tubo inferior
+        # Animação suavizada do tubo inferior (única modificação)
         pendulum_factor = self.smooth_movement(progress)
         self.tubo_inferior_rotation = pendulum_factor * self.max_pendulum_angle
         self.tubo_inferior_mesh.set_rotation([0, 0, self.tubo_inferior_rotation])
