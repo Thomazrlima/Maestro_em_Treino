@@ -28,10 +28,19 @@ class Example(Base):
         tecido_geometry = customGeometry(1, 1, 1, my_obj_reader('tecido_gaita.obj'))
         tecido_material = SurfaceMaterial(property_dict={"useVertexColors": True, "doubleSide": True})
         self.tecido_mesh = Mesh(tecido_geometry, tecido_material)
+        
+        tubo_inferior_geometry = customGeometry(1, 1, 1, my_obj_reader('tubo_inferior.obj'))
+        tubo_inferior_material = SurfaceMaterial(property_dict={"useVertexColors": True})
+        self.tubo_inferior_mesh = Mesh(tubo_inferior_geometry, tubo_inferior_material)
+        
+        self.tubo_inferior_mesh.set_position([0, 0, 0])
+        self.tubo_inferior_rotation = 0
+        self.max_pendulum_angle = math.pi / 32
 
         self.rig = MovementRig()
         self.rig.add(self.corpo_mesh)
         self.rig.add(self.tecido_mesh)
+        self.rig.add(self.tubo_inferior_mesh)
         
         self.rig.set_position([0, 0.5, -0.5])
         self.scene.add(self.rig)
@@ -58,6 +67,18 @@ class Example(Base):
             self.animation_start_time = self.time
             print("\n--- Starting inflation animation ---")
 
+    def smooth_movement(self, t):
+        """Função para suavizar o movimento pendular (mantida como você tinha)"""
+        return math.sin(t * math.pi * 2) * (1 - math.exp(-5 * t)) * math.exp(-0.5 * t)
+
+    def smooth_scale(self, progress):
+        """Nova função para suavizar especificamente a animação do tecido"""
+        if progress < 0.8:
+            return 0.95 + 0.05 * abs(math.sin(progress * math.pi * 2))
+        else:
+            fade_progress = (progress - 0.8) / 0.2
+            return 0.95 + 0.05 * (1 - fade_progress) * abs(math.sin(progress * math.pi * 2))
+
     def update_animation(self, delta_time):
         if not self.animation_active or not self.current_animation:
             return
@@ -67,14 +88,22 @@ class Example(Base):
         if elapsed > self.animation_duration:
             self.animation_active = False
             self.tecido_mesh.set_scale([1.0, 1.0, 1.0])
-            print("Animation completed - reset to original scale")
+            self.tubo_inferior_rotation = 0
+            self.tubo_inferior_mesh.set_rotation([0, 0, 0])
+            print("Animation completed - reset to original state")
             return
 
         progress = elapsed / self.animation_duration
         
-        scale_factor = 0.95 + 0.05 * abs(math.sin(progress * math.pi * 2))
+        scale_factor = self.smooth_scale(progress)
         self.tecido_mesh.set_scale([scale_factor, scale_factor, scale_factor])
-        print(f"Current scale: {scale_factor:.2f}")
+        
+        # Tubo inferior
+        pendulum_factor = self.smooth_movement(progress)
+        self.tubo_inferior_rotation = pendulum_factor * self.max_pendulum_angle
+        self.tubo_inferior_mesh.set_rotation([0, 0, self.tubo_inferior_rotation])
+        
+        print(f"Current scale: {scale_factor:.2f}, Pendulum angle: {math.degrees(self.tubo_inferior_rotation):.1f}°")
 
     def update(self):
         self.rig.update(self.input, self.delta_time)
