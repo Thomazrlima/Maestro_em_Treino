@@ -72,7 +72,7 @@ class Example(Base):
 
         self.label_texture = TextTexture(text=" Press 'Q' to start the 1st animation",
                                     system_font_name="Comicsans MS",
-                                    font_size=40, font_color=[200, 0, 200],
+                                    font_size=33, font_color=[200, 0, 200],
                                     image_width=600, image_height=128,
                                     align_horizontal=0.5, align_vertical=0.5,
                                     image_border_width=4,
@@ -150,7 +150,7 @@ class Example(Base):
     def update_label(self):
         self.label_texture_2 = TextTexture(text=" Good job!",
                                 system_font_name="Comicsans MS",
-                                font_size=40, font_color=[200, 0, 200],
+                                font_size=33, font_color=[200, 0, 200],
                                 image_width=600, image_height=128,
                                 align_horizontal=0.5, align_vertical=0.5,
                                 image_border_width=4,
@@ -163,7 +163,7 @@ class Example(Base):
     def start_label2(self):
         self.label_texture_3 = TextTexture(text=" Press 'W' to start the 2nd animation",
                                 system_font_name="Comicsans MS",
-                                font_size=40, font_color=[200, 0, 200],
+                                font_size=33, font_color=[200, 0, 200],
                                 image_width=600, image_height=128,
                                 align_horizontal=0.5, align_vertical=0.5,
                                 image_border_width=4,
@@ -176,7 +176,7 @@ class Example(Base):
     def start_label3(self):
         self.label_texture_3 = TextTexture(text=" Press 'E' to start the 3rd animation",
                                 system_font_name="Comicsans MS",
-                                font_size=40, font_color=[200, 0, 200],
+                                font_size=33, font_color=[200, 0, 200],
                                 image_width=600, image_height=128,
                                 align_horizontal=0.5, align_vertical=0.5,
                                 image_border_width=4,
