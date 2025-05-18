@@ -10,9 +10,7 @@ from extras.grid import GridHelper
 from extras.movement_rig import MovementRig
 from material.surface import SurfaceMaterial
 from core.obj_reader import my_obj_reader  
-from core.customGeometry import customGeometry  
-
-from core.customGeometry import customGeometry  
+from core.customGeometry import customGeometry    
 from extras.text_texture import TextTexture
 from material.texture import TextureMaterial
 from geometry.rectangle import RectangleGeometry
