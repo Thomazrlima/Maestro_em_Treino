@@ -21,7 +21,7 @@ class Example(Base):
         self.camera = Camera(aspect_ratio=800/600)
         self.camera.set_position([0.5, 1, 5])
         
-        geometry = customGeometry(1, 1, 1, my_obj_reader('harmonic1.obj'))
+        geometry = customGeometry(1, 1, 1, my_obj_reader('instrumentos/harmonic1.obj'))
         material = SurfaceMaterial(property_dict={"useVertexColors": True})
         self.mesh = Mesh(geometry, material)
 

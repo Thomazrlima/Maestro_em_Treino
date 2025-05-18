@@ -9,19 +9,20 @@ from extras.axes import AxesHelper
 from extras.grid import GridHelper
 from extras.movement_rig import MovementRig
 from material.surface import SurfaceMaterial
-from core.obj_reader import my_obj_reader  
-from core.customGeometry import customGeometry  
+from core.obj_reader import my_obj_reader
+from core.customGeometry import customGeometry
+from core_ext.object3d import Object3D
 
 class Example(Base):
     def initialize(self):
         print("Initializing program...")
         self.renderer = Renderer()
         self.scene = Scene()
-        
+
         self.camera = Camera(aspect_ratio=800/600)
         self.camera.set_position([0.5, 1, 5])
         
-        tecido_vertices = my_obj_reader('tecido_gaita.obj')
+        tecido_vertices = my_obj_reader('instrumentos/tecido_gaita.obj')
         tecido_vertices_array = np.array(tecido_vertices)
         tecido_center = np.mean(tecido_vertices_array, axis=0)
         centered_tecido_vertices = (tecido_vertices_array - tecido_center).tolist()
@@ -30,24 +31,25 @@ class Example(Base):
         tecido_material = SurfaceMaterial(property_dict={"useVertexColors": True, "doubleSide": True})
         self.tecido_mesh = Mesh(tecido_geometry, tecido_material)
 
-        corpo_vertices = my_obj_reader('corpo_gaita.obj')
+        corpo_vertices = my_obj_reader('instrumentos/corpo_gaita.obj')
         corpo_vertices_array = np.array(corpo_vertices)
         centered_corpo_vertices = (corpo_vertices_array - tecido_center).tolist()
         corpo_geometry = customGeometry(1, 1, 1, centered_corpo_vertices)
         corpo_material = SurfaceMaterial(property_dict={"useVertexColors": True})
         self.corpo_mesh = Mesh(corpo_geometry, corpo_material)
 
-        tubo_inferior_vertices = my_obj_reader('tubo_inferior.obj')
+        tubo_inferior_vertices = my_obj_reader('instrumentos/tubo_inferior.obj')
         tubo_vertices_array = np.array(tubo_inferior_vertices)
         centered_tubo_vertices = (tubo_vertices_array - tecido_center).tolist()
         tubo_inferior_geometry = customGeometry(1, 1, 1, centered_tubo_vertices)
         tubo_inferior_material = SurfaceMaterial(property_dict={"useVertexColors": True})
         self.tubo_inferior_mesh = Mesh(tubo_inferior_geometry, tubo_inferior_material)
+        self.tubo_inferior_mesh.translate(0, -0.1, 0)
         
         self.tubo_inferior_rotation = 0
         self.max_pendulum_angle = math.pi / 64
 
-        self.main_group = Mesh(None, None)
+        self.main_group = Object3D()
         self.main_group.add(self.corpo_mesh)
         self.main_group.add(self.tecido_mesh)
         self.main_group.add(self.tubo_inferior_mesh)
