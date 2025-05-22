@@ -86,16 +86,39 @@ class Example(Base):
         self.audio = Audio()
         self.audio.load(
            name='blowQ',
-           filepath='used_sounds/792585__sadiquecat__harmonica-c-noselvl-mic-blow-1-2-c-e.wav'
+           filepath='used_sounds/FitHarmonica/553289__sukondi__high-e-played-on-harmonica.mp3'
         )
         self.audio.load(
            name='blowW',
-           filepath='used_sounds/792623__sadiquecat__harmonica-c-front-exit-mic-steccato-chord-5.wav'
+           filepath='used_sounds/FitHarmonica/553290__sukondi__high-d-played-on-harmonica.mp3'
         )
         self.audio.load(
            name='blowE',
-           filepath='used_sounds/792610__sadiquecat__harmonica-c-front-exit-mic-blow-5.wav'
+           filepath='used_sounds/FitHarmonica/553291__sukondi__high-c-played-on-harmonica.mp3'
         )
+        self.audio.load(
+           name='blowR',
+           filepath='used_sounds/FitHarmonica/553292__sukondi__high-a-played-on-harmonica.mp3'
+        )
+        self.audio.load(
+           name='blowT',
+           filepath='used_sounds/FitHarmonica/553293__sukondi__high-g-played-on-harmonica.mp3'
+        )
+        self.audio.load(
+           name='blowY',
+           filepath='used_sounds/FitHarmonica/553294__sukondi__high-f-played-on-harmonica.mp3'
+        )
+        self.audio.load(
+           name='blowU',
+           filepath='used_sounds/FitHarmonica/553295__sukondi__high-b-played-on-harmonica.mp3'
+        )
+        self.audio.load(
+           name='blowI',
+           filepath='used_sounds/FitHarmonica/DoMaior.mp3'
+        )
+
+        self.audio.volume_to(0.3)
+
 
     def start_animation(self, key):
         if key in self.animations:
