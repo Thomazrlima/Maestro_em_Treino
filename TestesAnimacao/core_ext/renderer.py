@@ -1,5 +1,7 @@
 import OpenGL.GL as GL
+
 from core_ext.mesh import Mesh
+
 
 class Renderer:
     def __init__(self, clear_color=[0, 0, 0]):
@@ -38,4 +40,3 @@ class Renderer:
             # Update render settings
             mesh.material.update_render_settings()
             GL.glDrawArrays(mesh.material.setting_dict["drawStyle"], 0, mesh.geometry.vertex_count)
-            
