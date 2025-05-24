@@ -196,8 +196,12 @@ class Example(Base):
            filepath='used_sounds/FitHarmonica/DoMaior.mp3'
         )
 
-        self.audio.volume_to(0.2)
+        self.audio.volume_to(0.3)
 
+        self._label4_active = False
+        self._label4_start_time = 0.0
+        self._schedule_sequence = False
+        self._schedule_sequence_time = 0.0 
 
     def start_animation(self, key):
         if key in self.animations:
@@ -216,9 +220,16 @@ class Example(Base):
         if elapsed > self.animation_duration:
             self.animation_active = False
             self.rig.set_position(self.animation_start_position)
-            self.downtime = 0
-            self.past_time = self.time
             print(f"Animation {self.current_animation} completed")
+
+            if self.current_animation in ('q', 'w'):
+                self.downtime = True
+                self.past_time = self.time
+
+            if self.current_animation == 'e':
+                self._schedule_sequence = True
+                self._schedule_sequence_time = self.time
+
             return
 
         progress = elapsed / self.animation_duration
@@ -298,50 +309,84 @@ class Example(Base):
         self.label.set_position([0.5, 1.5, 3])
         self.scene.add(self.label)
 
+    def start_label5(self):
+        self.label_texture_5 = TextTexture(text=" Now your turn: Press 'T', 'Y', 'U', 'I'",
+                                system_font_name="Comicsans MS",
+                                font_size=33, font_color=[200, 0, 200],
+                                image_width=600, image_height=128,
+                                align_horizontal=0.5, align_vertical=0.5,
+                                image_border_width=4,
+                                image_border_color=[255, 0, 0])
+        self.label_material_5 = TextureMaterial(self.label_texture_5)
+        self.label = Mesh(self.label_geometry, self.label_material_5)
+        self.label.set_position([0.5, 1.5, 3])
+        self.scene.add(self.label)
+
     def start_sequence(self):
         if self.sequence_played:
             print("Sequence already played, ignoring subsequent calls.")
             return
-        self.sequence_played = True
         notes = ['blowQ', 'blowW', 'blowE', 'blowR']
         delay = 0.6
         for i, note in enumerate(notes):
             threading.Timer(delay * i, lambda n=note: self.audio.play(n)).start()
-        self.start_animation('e')
+        self.start_animation('r')
+        self.sequence_played = True
 
     def update(self):
         if self.label:
             self.label.look_at(self.camera.global_position)
         for key in self.animations:
             if self.input.is_key_pressed(key) and not self.animation_active:
-                self.start_animation(key)
                 if self.input.is_key_pressed('q'):
+                    self.start_animation('q')
                     self.scene.remove(self.label)
                     self.audio.play('blowQ')
                     self.last_key_pressed = 'q'
                 if self.input.is_key_pressed('w'):
+                    self.start_animation('w')
                     self.scene.remove(self.label)
                     self.audio.play('blowW')
                     self.last_key_pressed = 'w'
                 if self.input.is_key_pressed('e'):
+                    self.start_animation('e')
                     self.scene.remove(self.label)
                     self.audio.play('blowE')
                     self.last_key_pressed = 'e'
+                if self.input.is_key_down('t'):
+                    self.audio.play('blowT')
+                if self.input.is_key_down('y'):
+                    self.audio.play('blowY')
+                if self.input.is_key_down('u'):
+                    self.audio.play('blowU')
+                if self.input.is_key_down('i'):
+                    self.start_animation('i')
+                    self.audio.play('blowI')
             if self.downtime is not None:
                 elapsed_down = self.time - self.past_time
                 if elapsed_down > 3.0:
-                    self.past_time = 0.0
                     self.downtime = None
+                    self.past_time = 0.0
                     if self.last_key_pressed == 'q':
                         self.start_label2()
                     if self.last_key_pressed == 'w':
                         self.start_label3()
-                    if self.last_key_pressed == 'e':
-                        self.start_label4()
-                        elapsed_down2 = self.time - self.past_time
-                        if elapsed_down2 > 3.0:
-                            self.start_sequence()
-                            elapsed_down2 = None
+        
+        if self._schedule_sequence and (self.time - self._schedule_sequence_time) >= 3.0:
+            self.start_label4()
+            self.start_sequence()
+
+            self._label4_active = True
+            self._label4_start_time = self.time
+            
+            self._schedule_sequence = False
+
+        if self._label4_active and (self.time - self._label4_start_time) >= 3.0:
+            if hasattr(self, 'label') and self.label is not None:
+                self.scene.remove(self.label)
+            self.start_label5()
+            self._label4_active = False
+                                    
         self.update_animation(self.delta_time)
         self.renderer.render(self.scene, self.camera)
 
