@@ -8,10 +8,12 @@ from core_ext.scene import Scene
 from extras.axes import AxesHelper
 from extras.grid import GridHelper
 from extras.movement_rig import MovementRig
-from material.surface import SurfaceMaterial
-from core.obj_reader import my_obj_reader
-from core_ext.object3d import Object3D
-from core.customGeometry import customGeometry
+from core.obj_reader_harmonica import my_obj_reader
+from material.texture import TextureMaterial
+from core_ext.texture import Texture
+
+
+from geometry.harmonicGeometry import customGeometry
 
 class TriangleAnimation(Base):
     def initialize(self):
@@ -25,7 +27,9 @@ class TriangleAnimation(Base):
 
         self.rig = MovementRig()
         self.rig.add(self.triangle)
-        self.rig.add(self.drumstick)
+        self.rig.add(self.fio)
+        self.rig.add(self.drumstick_pega)
+        self.rig.add(self.drumstick_tubo)
         self.rig.set_position([0, 0.5, 0])
         self.scene.add(self.rig)
 
@@ -44,24 +48,43 @@ class TriangleAnimation(Base):
         self.drumstick_progress = 0
 
     def load_objects(self):
-        triangle_vertices = my_obj_reader('instrumentos/triangulo.obj')
-        triangle_array = np.array(triangle_vertices)
-        highest_y = np.max(triangle_array[:, 1])
-        triangle_top_aligned = triangle_array.copy()
-        triangle_top_aligned[:, 1] -= highest_y
+        v, uv = my_obj_reader('instrumentos/triangulo.obj')
+        corpo_verts = np.array(v[:6516], dtype=np.float32)
+        corpo_tx = np.array(uv[:6516], dtype=np.float32)
+        fio_verts = np.array(v[6516:], dtype=np.float32)
+        fio_tx = np.array(uv[6516:], dtype=np.float32)
 
-        geometry = customGeometry(1, 1, 1, triangle_top_aligned.tolist())
-        material = SurfaceMaterial(property_dict={"useVertexColors": True})
+        highest_y = np.max(fio_verts[:, 1])
+        corpo_verts[:, 1] -= highest_y
+        fio_verts[:, 1] -= highest_y
+
+        geometry = customGeometry(pos_d=corpo_verts, uv_data=corpo_tx)
+        material = TextureMaterial(texture=Texture("images/metal.jpg"))
         self.triangle = Mesh(geometry, material)
         self.triangle.set_position([0, 2, 0])
 
-        drumstick_vertices = my_obj_reader('instrumentos/baqueta.obj')
-        drumstick_centered = np.array(drumstick_vertices)
-        geometry = customGeometry(1, 1, 1, drumstick_centered.tolist())
-        material = SurfaceMaterial(property_dict={"useVertexColors": True})
-        self.drumstick = Mesh(geometry, material)
-        self.drumstick.set_position([1, 1, 0])
-        self.drumstick_initial_position = [1, 1, 0]
+        geometry = customGeometry(pos_d=fio_verts, uv_data=fio_tx)
+        material = TextureMaterial(texture=Texture("images/tecido.jpg"))
+        self.fio = Mesh(geometry, material)
+        self.fio.set_position([0, 2, 0])
+
+        v, uv = my_obj_reader('instrumentos/baqueta.obj')
+        tubo_bastao_verts = np.array(v[:372], dtype=np.float32)
+        tubo_bastao_tx = np.array(uv[:372], dtype=np.float32)
+        pega_bastao_verts = np.array(v[372:], dtype=np.float32)
+        pega_bastao_tx = np.array(uv[372:], dtype=np.float32)
+
+        geometry = customGeometry(pos_d=tubo_bastao_verts, uv_data=tubo_bastao_tx)
+        material = TextureMaterial(texture=Texture("images/metal.jpg"))
+        self.drumstick_tubo = Mesh(geometry, material)
+        self.drumstick_tubo.set_position([1, 1, 0])
+        self.drumstick_tubo_initial_position = [1, 1, 0]
+
+        geometry = customGeometry(pos_d=pega_bastao_verts, uv_data=pega_bastao_tx)
+        material = TextureMaterial(texture=Texture("images/madeira.jpg"))
+        self.drumstick_pega = Mesh(geometry, material)
+        self.drumstick_pega.set_position([1, 1, 0])
+        self.drumstick_pega_initial_position = [1, 1, 0]
 
     def hit_triangle(self):
         self.drumstick_state = "moving_forward"
@@ -73,12 +96,20 @@ class TriangleAnimation(Base):
         if self.drumstick_state == "moving_forward":
             self.drumstick_progress = min(1.0, (self.time - self.hit_time) / 0.4)
 
-            self.drumstick.set_position([
+            self.drumstick_tubo.set_position([
                 1 - self.drumstick_progress * 0.8,
                 1 - self.drumstick_progress * 0.4,
                 0
             ])
-            self.drumstick.set_rotation([0, 0, -self.drumstick_progress * math.pi / 4])
+            self.drumstick_tubo.set_rotation([0, 0, -self.drumstick_progress * math.pi / 4])
+
+            self.drumstick_pega.set_position([
+                1 - self.drumstick_progress * 0.8,
+                1 - self.drumstick_progress * 0.4,
+                0
+            ])
+            self.drumstick_pega.set_rotation([0, 0, -self.drumstick_progress * math.pi / 4])
+
 
             if self.drumstick_progress >= 1.0:
                 self.drumstick_state = "moving_back"
@@ -88,12 +119,22 @@ class TriangleAnimation(Base):
         elif self.drumstick_state == "moving_back":
             self.drumstick_progress = min(1.0, (self.time - self.hit_time) / 0.4)
 
-            self.drumstick.set_position([
+            self.drumstick_tubo.set_position([
                 0.2 + self.drumstick_progress * 0.8,
                 0.6 + self.drumstick_progress * 0.4,
                 0
             ])
-            self.drumstick.set_rotation([
+            self.drumstick_tubo.set_rotation([
+                0,
+                0,
+                -math.pi / 4 + self.drumstick_progress * math.pi / 4
+            ])
+            self.drumstick_pega.set_position([
+                0.2 + self.drumstick_progress * 0.8,
+                0.6 + self.drumstick_progress * 0.4,
+                0
+            ])
+            self.drumstick_pega.set_rotation([
                 0,
                 0,
                 -math.pi / 4 + self.drumstick_progress * math.pi / 4
@@ -101,8 +142,10 @@ class TriangleAnimation(Base):
 
             if self.drumstick_progress >= 1.0:
                 self.drumstick_state = "swinging"
-                self.drumstick.set_position(self.drumstick_initial_position)
-                self.drumstick.set_rotation([0, 0, 0])
+                self.drumstick_tubo.set_position(self.drumstick_tubo_initial_position)
+                self.drumstick_tubo.set_rotation([0, 0, 0])
+                self.drumstick_pega.set_position(self.drumstick_pega_initial_position)
+                self.drumstick_pega.set_rotation([0, 0, 0])
 
     def update_swing(self):
         if self.drumstick_state in ["moving_back", "swinging"]:
@@ -121,6 +164,7 @@ class TriangleAnimation(Base):
                     self.drumstick_state = "ready"
 
             self.triangle.set_rotation([0, 0, self.swing_angle])
+            self.fio.set_rotation([0, 0, self.swing_angle])
 
     def update(self):
         self.rig.update(self.input, self.delta_time)
