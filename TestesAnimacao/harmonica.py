@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import threading
 from core.base import Base
 from core_ext.camera import Camera
 from core_ext.mesh import Mesh
@@ -120,6 +121,8 @@ class Example(Base):
         grid.rotate_x(-math.pi / 2)
         self.scene.add(grid)
 
+        self.sequence_played = False
+
         self.animation_active = False
         self.current_animation = None
         self.downtime = None
@@ -213,7 +216,6 @@ class Example(Base):
         if elapsed > self.animation_duration:
             self.animation_active = False
             self.rig.set_position(self.animation_start_position)
-            self.update_label()
             self.downtime = 0
             self.past_time = self.time
             print(f"Animation {self.current_animation} completed")
@@ -284,7 +286,7 @@ class Example(Base):
         self.scene.add(self.label)
 
     def start_label4(self):
-        self.label_texture_4 = TextTexture(text=" Here's an example of a sequence of animations",
+        self.label_texture_4 = TextTexture(text=" Here's an example of a sequence",
                                 system_font_name="Comicsans MS",
                                 font_size=33, font_color=[200, 0, 200],
                                 image_width=600, image_height=128,
@@ -297,10 +299,15 @@ class Example(Base):
         self.scene.add(self.label)
 
     def start_sequence(self):
-        self.start_animation('q')
-        self.downtime = 0
-        self.past_time = self.time
-        self.last_key_pressed = 'q'
+        if self.sequence_played:
+            print("Sequence already played, ignoring subsequent calls.")
+            return
+        self.sequence_played = True
+        notes = ['blowQ', 'blowW', 'blowE', 'blowR']
+        delay = 0.6
+        for i, note in enumerate(notes):
+            threading.Timer(delay * i, lambda n=note: self.audio.play(n)).start()
+        self.start_animation('e')
 
     def update(self):
         if self.label:
@@ -331,6 +338,10 @@ class Example(Base):
                         self.start_label3()
                     if self.last_key_pressed == 'e':
                         self.start_label4()
+                        elapsed_down2 = self.time - self.past_time
+                        if elapsed_down2 > 3.0:
+                            self.start_sequence()
+                            elapsed_down2 = None
         self.update_animation(self.delta_time)
         self.renderer.render(self.scene, self.camera)
 
