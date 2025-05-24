@@ -162,7 +162,7 @@ class Example(Base):
         self.audio = Audio()
         self.audio.load(
            name='blowQ',
-           filepath='used_sounds/FitHarmonica/553289__sukondi__high-e-played-on-harmonica.mp3'
+           filepath='used_sounds/FitHarmonica/553291__sukondi__high-c-played-on-harmonica.mp3'
         )
         self.audio.load(
            name='blowW',
@@ -170,11 +170,11 @@ class Example(Base):
         )
         self.audio.load(
            name='blowE',
-           filepath='used_sounds/FitHarmonica/553291__sukondi__high-c-played-on-harmonica.mp3'
+           filepath='used_sounds/FitHarmonica/553289__sukondi__high-e-played-on-harmonica.mp3'
         )
         self.audio.load(
            name='blowR',
-           filepath='used_sounds/FitHarmonica/553292__sukondi__high-a-played-on-harmonica.mp3'
+           filepath='used_sounds/FitHarmonica/553294__sukondi__high-f-played-on-harmonica.mp3'
         )
         self.audio.load(
            name='blowT',
@@ -182,7 +182,7 @@ class Example(Base):
         )
         self.audio.load(
            name='blowY',
-           filepath='used_sounds/FitHarmonica/553294__sukondi__high-f-played-on-harmonica.mp3'
+           filepath='used_sounds/FitHarmonica/553292__sukondi__high-a-played-on-harmonica.mp3'
         )
         self.audio.load(
            name='blowU',
@@ -283,6 +283,25 @@ class Example(Base):
         self.label.set_position([0.5, 1.5, 3])
         self.scene.add(self.label)
 
+    def start_label4(self):
+        self.label_texture_4 = TextTexture(text=" Here's an example of a sequence of animations",
+                                system_font_name="Comicsans MS",
+                                font_size=33, font_color=[200, 0, 200],
+                                image_width=600, image_height=128,
+                                align_horizontal=0.5, align_vertical=0.5,
+                                image_border_width=4,
+                                image_border_color=[255, 0, 0])
+        self.label_material_4 = TextureMaterial(self.label_texture_4)
+        self.label = Mesh(self.label_geometry, self.label_material_4)
+        self.label.set_position([0.5, 1.5, 3])
+        self.scene.add(self.label)
+
+    def start_sequence(self):
+        self.start_animation('q')
+        self.downtime = 0
+        self.past_time = self.time
+        self.last_key_pressed = 'q'
+
     def update(self):
         if self.label:
             self.label.look_at(self.camera.global_position)
@@ -311,7 +330,7 @@ class Example(Base):
                     if self.last_key_pressed == 'w':
                         self.start_label3()
                     if self.last_key_pressed == 'e':
-                        self.quit()
+                        self.start_label4()
         self.update_animation(self.delta_time)
         self.renderer.render(self.scene, self.camera)
 
