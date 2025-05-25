@@ -166,21 +166,6 @@ class Example(Base):
             '[': {'direction': [-1.0, 0.1, 0.0], 'intensity': 1.3}
         }
 
-        self.label_texture = TextTexture(text=" Press 'Q' to start the 1st animation",
-                                    system_font_name="Comicsans MS",
-                                    font_size=33, font_color=[200, 0, 200],
-                                    image_width=600, image_height=128,
-                                    align_horizontal=0.5, align_vertical=0.5,
-                                    image_border_width=4,
-                                    image_border_color=[255, 0, 0])
-
-        self.label_material = TextureMaterial(self.label_texture)
-        self.label_geometry = RectangleGeometry(width=2, height=0.5)
-        self.label_geometry.apply_matrix(Matrix.make_rotation_y(3.14)) # Rotate to face -z
-        self.label = Mesh(self.label_geometry, self.label_material)
-        self.label.set_position([0.5, 1.5, 3])
-        self.scene.add(self.label)
-
         self.audio = Audio()
         self.audio.load(
            name='blowQ',
@@ -215,12 +200,7 @@ class Example(Base):
            filepath='used_sounds/FitHarmonica/DoMaior.mp3'
         )
 
-        self.audio.volume_to(0.05)
-
-        self._label4_active = False
-        self._label4_start_time = 0.0
-        self._schedule_sequence = False
-        self._schedule_sequence_time = 0.0 
+        self.audio.volume_to(0.3)
 
     def start_animation(self, key):
         if key in self.animations:
@@ -240,14 +220,6 @@ class Example(Base):
             self.animation_active = False
             self.rig.set_position(self.animation_start_position)
             print(f"Animation {self.current_animation} completed")
-
-            if self.current_animation in ('q', 'w'):
-                self.downtime = True
-                self.past_time = self.time
-
-            if self.current_animation == 'e':
-                self._schedule_sequence = True
-                self._schedule_sequence_time = self.time
 
             return
 
@@ -276,102 +248,42 @@ class Example(Base):
         
         self.rig.set_position(new_position)
 
-    def update_label(self):
-        self.label_texture_2 = TextTexture(text=" Good job!",
-                                system_font_name="Comicsans MS",
-                                font_size=33, font_color=[200, 0, 200],
-                                image_width=600, image_height=128,
-                                align_horizontal=0.5, align_vertical=0.5,
-                                image_border_width=4,
-                                image_border_color=[255, 0, 0])
-        self.label_material_2 = TextureMaterial(self.label_texture_2)
-        self.label = Mesh(self.label_geometry, self.label_material_2)
-        self.label.set_position([0.5, 1.5, 3])
-        self.scene.add(self.label)
-
-    def start_label2(self):
-        self.label_texture_3 = TextTexture(text=" Press 'W' to start the 2nd animation",
-                                system_font_name="Comicsans MS",
-                                font_size=33, font_color=[200, 0, 200],
-                                image_width=600, image_height=128,
-                                align_horizontal=0.5, align_vertical=0.5,
-                                image_border_width=4,
-                                image_border_color=[255, 0, 0])
-        self.label_material_3 = TextureMaterial(self.label_texture_3)
-        self.label = Mesh(self.label_geometry, self.label_material_3)
-        self.label.set_position([0.5, 1.5, 3])
-        self.scene.add(self.label)
-
-    def start_label3(self):
-        self.label_texture_3 = TextTexture(text=" Press 'E' to start the 3rd animation",
-                                system_font_name="Comicsans MS",
-                                font_size=33, font_color=[200, 0, 200],
-                                image_width=600, image_height=128,
-                                align_horizontal=0.5, align_vertical=0.5,
-                                image_border_width=4,
-                                image_border_color=[255, 0, 0])
-        self.label_material_3 = TextureMaterial(self.label_texture_3)
-        self.label = Mesh(self.label_geometry, self.label_material_3)
-        self.label.set_position([0.5, 1.5, 3])
-        self.scene.add(self.label)
-
-    def start_label4(self):
-        self.label_texture_4 = TextTexture(text=" Here's an example of a sequence",
-                                system_font_name="Comicsans MS",
-                                font_size=33, font_color=[200, 0, 200],
-                                image_width=600, image_height=128,
-                                align_horizontal=0.5, align_vertical=0.5,
-                                image_border_width=4,
-                                image_border_color=[255, 0, 0])
-        self.label_material_4 = TextureMaterial(self.label_texture_4)
-        self.label = Mesh(self.label_geometry, self.label_material_4)
-        self.label.set_position([0.5, 1.5, 3])
-        self.scene.add(self.label)
-
-    def start_label5(self):
-        self.label_texture_5 = TextTexture(text=" Now your turn: Press 'T', 'Y', 'U', 'I'",
-                                system_font_name="Comicsans MS",
-                                font_size=33, font_color=[200, 0, 200],
-                                image_width=600, image_height=128,
-                                align_horizontal=0.5, align_vertical=0.5,
-                                image_border_width=4,
-                                image_border_color=[255, 0, 0])
-        self.label_material_5 = TextureMaterial(self.label_texture_5)
-        self.label = Mesh(self.label_geometry, self.label_material_5)
-        self.label.set_position([0.5, 1.5, 3])
-        self.scene.add(self.label)
-
-    def start_sequence(self):
-        if self.sequence_played:
-            print("Sequence already played, ignoring subsequent calls.")
-            return
-        notes = ['blowQ', 'blowW', 'blowE', 'blowR']
-        delay = 1
-        for i, note in enumerate(notes):
-            threading.Timer(delay * i, lambda n=note: self.audio.play(n)).start()
-        self.start_animation('r')
-        self.sequence_played = True
-
     def update(self):
-        if self.label:
-            self.label.look_at(self.camera.global_position)
         for key in self.animations:
             if self.input.is_key_pressed(key) and not self.animation_active:
                 if self.input.is_key_pressed('q'):
                     self.start_animation('q')
-                    self.scene.remove(self.label)
                     self.audio.play('blowQ')
-                    self.last_key_pressed = 'q'
                 if self.input.is_key_pressed('w'):
                     self.start_animation('w')
-                    self.scene.remove(self.label)
                     self.audio.play('blowW')
-                    self.last_key_pressed = 'w'
                 if self.input.is_key_pressed('e'):
                     self.start_animation('e')
-                    self.scene.remove(self.label)
                     self.audio.play('blowE')
-                    self.last_key_pressed = 'e'
+                if self.input.is_key_pressed('r'):
+                    self.start_animation('r')
+                    self.audio.play('blowR')
+                if self.input.is_key_down('t'):
+                    self.start_animation('t')
+                    self.audio.play('blowT')
+                if self.input.is_key_down('y'):
+                    self.start_animation('y')
+                    self.audio.play('blowY')
+                if self.input.is_key_down('u'):
+                    self.start_animation('u')
+                    self.audio.play('blowU')
+                if self.input.is_key_down('i'):
+                    self.start_animation('i')
+                    self.audio.play('blowI')
+            elif self.input.is_key_pressed(key) and self.animation_active:
+                if self.input.is_key_pressed('q'):
+                    self.audio.play('blowQ')
+                if self.input.is_key_pressed('w'):
+                    self.audio.play('blowW')
+                if self.input.is_key_pressed('e'):
+                    self.audio.play('blowE')
+                if self.input.is_key_pressed('r'):
+                    self.audio.play('blowR')
                 if self.input.is_key_down('t'):
                     self.audio.play('blowT')
                 if self.input.is_key_down('y'):
@@ -379,34 +291,9 @@ class Example(Base):
                 if self.input.is_key_down('u'):
                     self.audio.play('blowU')
                 if self.input.is_key_down('i'):
-                    self.start_animation('i')
                     self.audio.play('blowI')
-            if self.downtime is not None:
-                elapsed_down = self.time - self.past_time
-                if elapsed_down > 3.0:
-                    self.downtime = None
-                    self.past_time = 0.0
-                    if self.last_key_pressed == 'q':
-                        self.start_label2()
-                    if self.last_key_pressed == 'w':
-                        self.start_label3()
-        
-        if self._schedule_sequence and (self.time - self._schedule_sequence_time) >= 3.0:
-            self.start_label4()
-            self.start_sequence()
-
-            self._label4_active = True
-            self._label4_start_time = self.time
-            
-            self._schedule_sequence = False
-
-        if self._label4_active and (self.time - self._label4_start_time) >= 3.0:
-            if hasattr(self, 'label') and self.label is not None:
-                self.scene.remove(self.label)
-            self.start_label5()
-            self._label4_active = False
                                     
         self.update_animation(self.delta_time)
         self.renderer.render(self.scene, self.camera)
 
-Example(screen_size=[1700, 1500]).run()
+Example(screen_size=[800, 600]).run()
