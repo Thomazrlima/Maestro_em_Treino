@@ -59,22 +59,17 @@ class Button:
         if self.action:
             print(f"Executando: {self.action}")
             try:
-                if self.action.endswith(".py"):
-                    pygame.quit()
-                    subprocess.run([sys.executable, self.action])
-                    pygame.init()
-                    global screen
-                    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-                elif self.action == "exit":
-                    pygame.quit()
-                    sys.exit()
+                pygame.quit()
+                subprocess.run(["python", self.action])
+                os.execv(sys.executable, ['python'] + sys.argv)
             except Exception as e:
                 print(f"Erro ao executar o script: {e}")
+                pygame.init()
 
 def main_menu():
     buttons = [
-        Button(SCREEN_WIDTH // 2 - 150, 240, 300, 60, "Jogar", "Mapa.py"),
-        Button(SCREEN_WIDTH // 2 - 150, 320, 300, 60, "Tutorial", "harmonica.py"),
+        Button(SCREEN_WIDTH // 2 - 150, 240, 300, 60, "Jogar", "instrument_menu.py"),
+        Button(SCREEN_WIDTH // 2 - 150, 320, 300, 60, "Tutorial", "harmonica_tutorial.py"),
         Button(SCREEN_WIDTH // 2 - 150, 400, 300, 60, "Sair", "exit")
     ]
 
@@ -89,9 +84,13 @@ def main_menu():
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 for button in buttons:
                     if button.rect.collidepoint(event.pos):
-                        button.execute_action()
-                        if button.action != "exit":
+                        if button.action == "exit":
                             running = False
+                        else:
+                            button.execute_action()
+
+        for button in buttons:
+            button.check_hover(mouse_pos)
 
         draw_gradient_background()
 
@@ -99,7 +98,6 @@ def main_menu():
         screen.blit(title, (SCREEN_WIDTH // 2 - title.get_width() // 2, 80))
 
         for button in buttons:
-            button.check_hover(mouse_pos)
             button.draw(screen)
 
         pygame.display.flip()
@@ -108,5 +106,4 @@ def main_menu():
     sys.exit()
 
 if __name__ == "__main__":
-    while True:
-        main_menu()
+    main_menu()
