@@ -10,29 +10,49 @@ from extras.axes import AxesHelper
 from extras.grid import GridHelper
 from extras.movement_rig import MovementRig
 from material.surface import SurfaceMaterial
-from core.obj_reader_harmonica import my_obj_reader  
-from geometry.harmonicGeometry import customGeometry    
+from core.obj_reader_harmonica import my_obj_reader
+from geometry.harmonicGeometry import customGeometry
 from extras.text_texture import TextTexture
 from material.texture import TextureMaterial
 from geometry.rectangle import RectangleGeometry
 from core.matrix import Matrix
+from geometry.sphere import SphereGeometry
+from material.phong import PhongMaterial
 
 from core_ext.audio import Audio
 from core_ext.texture import Texture
+
+
 class Example(Base):
     def initialize(self):
         print("Initializing program...")
         self.renderer = Renderer()
         self.scene = Scene()
-        
-        self.camera = Camera(aspect_ratio=800/600)
+
+        self.camera = Camera(aspect_ratio=800 / 600)
         self.camera.set_position([0.5, 1, 5])
         v, uv = my_obj_reader('instrumentos/harmonic.obj')
-        
+
         self.rig = MovementRig()
         self.rig.set_position([0.5, 0.8, 3])
         self.rig.rotate_y(math.pi / 2)
         self.rig.disable_movement()
+
+        sky_geometry = SphereGeometry(radius=50)
+        sky_material = TextureMaterial(texture=Texture(file_name="images/tecido_fundo.jpg"),
+                                       property_dict={"repeatUV": [50, 50]})
+        sky = Mesh(sky_geometry, sky_material)
+        self.scene.add(sky)
+        ground_geometry = RectangleGeometry(width=100, height=100)
+        ground_material = TextureMaterial(
+            texture=Texture(file_name="images/chao_tutorial.jpg"),
+            property_dict={"repeatUV": [10, 10]},
+            # number_of_light_sources=2,
+            # use_shadow=True
+        )
+        ground = Mesh(ground_geometry, ground_material)
+        ground.rotate_x(-math.pi / 2)
+        self.scene.add(ground)
 
         cima_peq_index = list(range(0, 2748))
         sphere_index = list(range(2748, 5628))
@@ -92,7 +112,7 @@ class Example(Base):
         sphere2_baixo_material = TextureMaterial(texture=sphere2_baixo_texture)
         sphere_baixo_material = TextureMaterial(texture=sphere_baixo_texture)
         main_material = TextureMaterial(texture=main_texture, property_dict={"repeatUV": [7, 2]})
-#        main_material = TextureMaterial(texture=main_texture)
+        #        main_material = TextureMaterial(texture=main_texture)
 
         cima_peq = Mesh(cima_peq_geometry, cima_peq_material)
         sphere = Mesh(sphere_geometry, sphere_material)
@@ -113,13 +133,13 @@ class Example(Base):
         self.rig.add(sphere2_baixo)
         self.rig.add(sphere_baixo)
         self.rig.add(main)
-        
+
         self.scene.add(self.rig)
-        self.scene.add(AxesHelper(axis_length=2))
-        
-        grid = GridHelper(size=20, grid_color=[1, 1, 1], center_color=[1, 1, 0])
-        grid.rotate_x(-math.pi / 2)
-        self.scene.add(grid)
+        # self.scene.add(AxesHelper(axis_length=2))
+
+        # grid = GridHelper(size=20, grid_color=[1, 1, 1], center_color=[1, 1, 0])
+        # grid.rotate_x(-math.pi / 2)
+        # self.scene.add(grid)
 
         self.sequence_played = False
 
@@ -130,11 +150,11 @@ class Example(Base):
         self.last_key_pressed = None
         self.animation_start_time = 0
         self.animation_duration = 1.0
-        self.animation_speed = 1.0 
+        self.animation_speed = 1.0
         self.animation_start_position = [0, 0.5, -0.5]
-        
+
         self.animations = {
-            'q': {'direction': [1.0, 0.0, 0.0], 'intensity': 1.0}, 
+            'q': {'direction': [1.0, 0.0, 0.0], 'intensity': 1.0},
             'w': {'direction': [-1.0, 0.0, 0.0], 'intensity': 1.0},
             'e': {'direction': [1.0, 0.0, 0.0], 'intensity': 0.8, 'oscillate': True},
             'r': {'direction': [-1.0, 0.0, 0.0], 'intensity': 0.8, 'oscillate': True},
@@ -148,60 +168,60 @@ class Example(Base):
         }
 
         self.label_texture = TextTexture(text=" Press 'Q' to start the 1st animation",
-                                    system_font_name="Comicsans MS",
-                                    font_size=33, font_color=[200, 0, 200],
-                                    image_width=600, image_height=128,
-                                    align_horizontal=0.5, align_vertical=0.5,
-                                    image_border_width=4,
-                                    image_border_color=[255, 0, 0])
+                                         system_font_name="Comicsans MS",
+                                         font_size=33, font_color=[200, 0, 200],
+                                         image_width=600, image_height=128,
+                                         align_horizontal=0.5, align_vertical=0.5,
+                                         image_border_width=4,
+                                         image_border_color=[255, 0, 0])
 
         self.label_material = TextureMaterial(self.label_texture)
         self.label_geometry = RectangleGeometry(width=2, height=0.5)
-        self.label_geometry.apply_matrix(Matrix.make_rotation_y(3.14)) # Rotate to face -z
+        self.label_geometry.apply_matrix(Matrix.make_rotation_y(3.14))  # Rotate to face -z
         self.label = Mesh(self.label_geometry, self.label_material)
         self.label.set_position([0.5, 1.5, 3])
         self.scene.add(self.label)
 
         self.audio = Audio()
         self.audio.load(
-           name='blowQ',
-           filepath='used_sounds/FitHarmonica/553291__sukondi__high-c-played-on-harmonica.mp3'
+            name='blowQ',
+            filepath='used_sounds/FitHarmonica/553291__sukondi__high-c-played-on-harmonica.mp3'
         )
         self.audio.load(
-           name='blowW',
-           filepath='used_sounds/FitHarmonica/553290__sukondi__high-d-played-on-harmonica.mp3'
+            name='blowW',
+            filepath='used_sounds/FitHarmonica/553290__sukondi__high-d-played-on-harmonica.mp3'
         )
         self.audio.load(
-           name='blowE',
-           filepath='used_sounds/FitHarmonica/553289__sukondi__high-e-played-on-harmonica.mp3'
+            name='blowE',
+            filepath='used_sounds/FitHarmonica/553289__sukondi__high-e-played-on-harmonica.mp3'
         )
         self.audio.load(
-           name='blowR',
-           filepath='used_sounds/FitHarmonica/553294__sukondi__high-f-played-on-harmonica.mp3'
+            name='blowR',
+            filepath='used_sounds/FitHarmonica/553294__sukondi__high-f-played-on-harmonica.mp3'
         )
         self.audio.load(
-           name='blowT',
-           filepath='used_sounds/FitHarmonica/553293__sukondi__high-g-played-on-harmonica.mp3'
+            name='blowT',
+            filepath='used_sounds/FitHarmonica/553293__sukondi__high-g-played-on-harmonica.mp3'
         )
         self.audio.load(
-           name='blowY',
-           filepath='used_sounds/FitHarmonica/553292__sukondi__high-a-played-on-harmonica.mp3'
+            name='blowY',
+            filepath='used_sounds/FitHarmonica/553292__sukondi__high-a-played-on-harmonica.mp3'
         )
         self.audio.load(
-           name='blowU',
-           filepath='used_sounds/FitHarmonica/553295__sukondi__high-b-played-on-harmonica.mp3'
+            name='blowU',
+            filepath='used_sounds/FitHarmonica/553295__sukondi__high-b-played-on-harmonica.mp3'
         )
         self.audio.load(
-           name='blowI',
-           filepath='used_sounds/FitHarmonica/DoMaior.mp3'
+            name='blowI',
+            filepath='used_sounds/FitHarmonica/DoMaior.mp3'
         )
 
-        self.audio.volume_to(1)
+        self.audio.volume_to(0.05)
 
         self._label4_active = False
         self._label4_start_time = 0.0
         self._schedule_sequence = False
-        self._schedule_sequence_time = 0.0 
+        self._schedule_sequence_time = 0.0
 
     def start_animation(self, key):
         if key in self.animations:
@@ -216,7 +236,7 @@ class Example(Base):
             return
 
         elapsed = (self.time - self.animation_start_time) * self.animation_speed
-        
+
         if elapsed > self.animation_duration:
             self.animation_active = False
             self.rig.set_position(self.animation_start_position)
@@ -233,38 +253,38 @@ class Example(Base):
             return
 
         progress = elapsed / self.animation_duration
-        
+
         anim_params = self.animations[self.current_animation]
         direction = anim_params['direction']
         intensity = anim_params['intensity']
-        
+
         if anim_params.get('oscillate', False):
             movement_progress = math.sin(progress * 2 * math.pi)
         else:
             movement_progress = math.sin(progress * math.pi)
-        
+
         displacement = [
-            direction[0] * intensity * movement_progress,
-            direction[1] * intensity * movement_progress,
+            direction[0] * intensity * movement_progress * 2,
+            direction[1] * intensity * movement_progress * 2,
             0
         ]
-        
+
         new_position = [
             self.animation_start_position[0] + displacement[0],
             self.animation_start_position[1] + displacement[1],
             self.animation_start_position[2]
         ]
-        
+
         self.rig.set_position(new_position)
 
     def update_label(self):
         self.label_texture_2 = TextTexture(text=" Good job!",
-                                system_font_name="Comicsans MS",
-                                font_size=33, font_color=[200, 0, 200],
-                                image_width=600, image_height=128,
-                                align_horizontal=0.5, align_vertical=0.5,
-                                image_border_width=4,
-                                image_border_color=[255, 0, 0])
+                                           system_font_name="Comicsans MS",
+                                           font_size=33, font_color=[200, 0, 200],
+                                           image_width=600, image_height=128,
+                                           align_horizontal=0.5, align_vertical=0.5,
+                                           image_border_width=4,
+                                           image_border_color=[255, 0, 0])
         self.label_material_2 = TextureMaterial(self.label_texture_2)
         self.label = Mesh(self.label_geometry, self.label_material_2)
         self.label.set_position([0.5, 1.5, 3])
@@ -272,12 +292,12 @@ class Example(Base):
 
     def start_label2(self):
         self.label_texture_3 = TextTexture(text=" Press 'W' to start the 2nd animation",
-                                system_font_name="Comicsans MS",
-                                font_size=33, font_color=[200, 0, 200],
-                                image_width=600, image_height=128,
-                                align_horizontal=0.5, align_vertical=0.5,
-                                image_border_width=4,
-                                image_border_color=[255, 0, 0])
+                                           system_font_name="Comicsans MS",
+                                           font_size=33, font_color=[200, 0, 200],
+                                           image_width=600, image_height=128,
+                                           align_horizontal=0.5, align_vertical=0.5,
+                                           image_border_width=4,
+                                           image_border_color=[255, 0, 0])
         self.label_material_3 = TextureMaterial(self.label_texture_3)
         self.label = Mesh(self.label_geometry, self.label_material_3)
         self.label.set_position([0.5, 1.5, 3])
@@ -285,12 +305,12 @@ class Example(Base):
 
     def start_label3(self):
         self.label_texture_3 = TextTexture(text=" Press 'E' to start the 3rd animation",
-                                system_font_name="Comicsans MS",
-                                font_size=33, font_color=[200, 0, 200],
-                                image_width=600, image_height=128,
-                                align_horizontal=0.5, align_vertical=0.5,
-                                image_border_width=4,
-                                image_border_color=[255, 0, 0])
+                                           system_font_name="Comicsans MS",
+                                           font_size=33, font_color=[200, 0, 200],
+                                           image_width=600, image_height=128,
+                                           align_horizontal=0.5, align_vertical=0.5,
+                                           image_border_width=4,
+                                           image_border_color=[255, 0, 0])
         self.label_material_3 = TextureMaterial(self.label_texture_3)
         self.label = Mesh(self.label_geometry, self.label_material_3)
         self.label.set_position([0.5, 1.5, 3])
@@ -298,12 +318,12 @@ class Example(Base):
 
     def start_label4(self):
         self.label_texture_4 = TextTexture(text=" Here's an example of a sequence",
-                                system_font_name="Comicsans MS",
-                                font_size=33, font_color=[200, 0, 200],
-                                image_width=600, image_height=128,
-                                align_horizontal=0.5, align_vertical=0.5,
-                                image_border_width=4,
-                                image_border_color=[255, 0, 0])
+                                           system_font_name="Comicsans MS",
+                                           font_size=33, font_color=[200, 0, 200],
+                                           image_width=600, image_height=128,
+                                           align_horizontal=0.5, align_vertical=0.5,
+                                           image_border_width=4,
+                                           image_border_color=[255, 0, 0])
         self.label_material_4 = TextureMaterial(self.label_texture_4)
         self.label = Mesh(self.label_geometry, self.label_material_4)
         self.label.set_position([0.5, 1.5, 3])
@@ -311,12 +331,12 @@ class Example(Base):
 
     def start_label5(self):
         self.label_texture_5 = TextTexture(text=" Now your turn: Press 'T', 'Y', 'U', 'I'",
-                                system_font_name="Comicsans MS",
-                                font_size=33, font_color=[200, 0, 200],
-                                image_width=600, image_height=128,
-                                align_horizontal=0.5, align_vertical=0.5,
-                                image_border_width=4,
-                                image_border_color=[255, 0, 0])
+                                           system_font_name="Comicsans MS",
+                                           font_size=33, font_color=[200, 0, 200],
+                                           image_width=600, image_height=128,
+                                           align_horizontal=0.5, align_vertical=0.5,
+                                           image_border_width=4,
+                                           image_border_color=[255, 0, 0])
         self.label_material_5 = TextureMaterial(self.label_texture_5)
         self.label = Mesh(self.label_geometry, self.label_material_5)
         self.label.set_position([0.5, 1.5, 3])
@@ -327,7 +347,7 @@ class Example(Base):
             print("Sequence already played, ignoring subsequent calls.")
             return
         notes = ['blowQ', 'blowW', 'blowE', 'blowR']
-        delay = 0.6
+        delay = 1
         for i, note in enumerate(notes):
             threading.Timer(delay * i, lambda n=note: self.audio.play(n)).start()
         self.start_animation('r')
@@ -371,14 +391,14 @@ class Example(Base):
                         self.start_label2()
                     if self.last_key_pressed == 'w':
                         self.start_label3()
-        
+
         if self._schedule_sequence and (self.time - self._schedule_sequence_time) >= 3.0:
             self.start_label4()
             self.start_sequence()
 
             self._label4_active = True
             self._label4_start_time = self.time
-            
+
             self._schedule_sequence = False
 
         if self._label4_active and (self.time - self._label4_start_time) >= 3.0:
@@ -386,8 +406,9 @@ class Example(Base):
                 self.scene.remove(self.label)
             self.start_label5()
             self._label4_active = False
-                                    
+
         self.update_animation(self.delta_time)
         self.renderer.render(self.scene, self.camera)
 
-Example(screen_size=[800, 600]).run()
+
+Example(screen_size=[1700, 1500]).run()
