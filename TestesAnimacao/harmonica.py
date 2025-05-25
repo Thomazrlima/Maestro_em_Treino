@@ -200,7 +200,8 @@ class Example(Base):
            filepath='used_sounds/FitHarmonica/DoMaior.mp3'
         )
 
-        self.audio.volume_to(0.3)
+        self.audio.volume_to(0.5)
+        self.audio.volume_to(3, name='blowI')
 
     def start_animation(self, key):
         if key in self.animations:
@@ -251,46 +252,62 @@ class Example(Base):
     def update(self):
         for key in self.animations:
             if self.input.is_key_pressed(key) and not self.animation_active:
-                if self.input.is_key_pressed('q'):
+                if self.input.is_key_down('q'):
+                    print("Key 'q' pressed")
                     self.start_animation('q')
                     self.audio.play('blowQ')
-                if self.input.is_key_pressed('w'):
+                if self.input.is_key_down('w'):
+                    print("Key 'w' pressed")
                     self.start_animation('w')
                     self.audio.play('blowW')
-                if self.input.is_key_pressed('e'):
+                if self.input.is_key_down('e'):
+                    print("Key 'e' pressed")
                     self.start_animation('e')
                     self.audio.play('blowE')
-                if self.input.is_key_pressed('r'):
+                if self.input.is_key_down('r'):
+                    print("Key 'r' pressed")
                     self.start_animation('r')
                     self.audio.play('blowR')
                 if self.input.is_key_down('t'):
+                    print("Key 't' pressed")
                     self.start_animation('t')
                     self.audio.play('blowT')
                 if self.input.is_key_down('y'):
+                    print("Key 'y' pressed")
                     self.start_animation('y')
                     self.audio.play('blowY')
                 if self.input.is_key_down('u'):
+                    print("Key 'u' pressed")
                     self.start_animation('u')
                     self.audio.play('blowU')
                 if self.input.is_key_down('i'):
+                    print("Key 'i' pressed")
                     self.start_animation('i')
                     self.audio.play('blowI')
             elif self.input.is_key_pressed(key) and self.animation_active:
-                if self.input.is_key_pressed('q'):
+                if self.input.is_key_down('q'):
+                    print("Key 'q' pressed")
                     self.audio.play('blowQ')
-                if self.input.is_key_pressed('w'):
+                if self.input.is_key_down('w'):
+                    print("Key 'w' pressed")
                     self.audio.play('blowW')
-                if self.input.is_key_pressed('e'):
+                if self.input.is_key_down('e'):
+                    print("Key 'e' pressed")
                     self.audio.play('blowE')
-                if self.input.is_key_pressed('r'):
+                if self.input.is_key_down('r'):
+                    print("Key 'r' pressed")
                     self.audio.play('blowR')
                 if self.input.is_key_down('t'):
+                    print("Key 't' pressed")
                     self.audio.play('blowT')
                 if self.input.is_key_down('y'):
+                    print("Key 'y' pressed")
                     self.audio.play('blowY')
                 if self.input.is_key_down('u'):
+                    print("Key 'u' pressed")
                     self.audio.play('blowU')
                 if self.input.is_key_down('i'):
+                    print("Key 'i' pressed")
                     self.audio.play('blowI')
                                     
         self.update_animation(self.delta_time)

@@ -31,13 +31,17 @@ class Audio:
         else:
             print(f"Áudio: som '{name}' não encontrado.")
 
-    def set_volume(self, volume: float):
+    def set_volume(self, volume: float, name: str = None):
         """
         Define o volume master (0.0 a 1.0) para todos os sons carregados.
         """
         self.volume = max(0.0, min(1.0, volume))
-        for sound in self.sounds.values():
+        if name:
+            sound = self.sounds.get(name)
             sound.set_volume(self.volume)
+        else:
+            for sound in self.sounds.values():
+                sound.set_volume(self.volume)
 
     def get_volume(self) -> float:
         """
@@ -45,8 +49,10 @@ class Audio:
         """
         return self.volume
 
-    def volume_to(self, level: float):
+    def volume_to(self, level: float, name: str = None):
         """
         Define o volume master para um valor específico (por exemplo, 0.3).
         """
         self.set_volume(level)
+        if name:
+            sound = self.sounds.get(name)
