@@ -194,8 +194,7 @@ class Example(Base):
            filepath='used_sounds/FitHarmonica/DoMaior.mp3'
         )
 
-        self.audio.volume_to(0.05)
-        self.audio.volume_to(3, name='blowI')
+        self.audio.set_master_volume(1)
 
     def start_animation(self, key):
         if key in self.animations:
@@ -755,6 +754,7 @@ class Example(Base):
         self.directional_light.set_direction([10, -1, -90])
 
     def update(self):
+        self.audio.set_sound_volume('blowI', 2)
         for key in self.animations:
             if self.input.is_key_pressed(key) and not self.animation_active:
                 if self.input.is_key_down('q'):

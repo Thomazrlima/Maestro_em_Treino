@@ -216,7 +216,7 @@ class Example(Base):
             filepath='used_sounds/FitHarmonica/DoMaior.mp3'
         )
 
-        self.audio.volume_to(0.05)
+        self.audio.volume_to(1)
 
         self._label4_active = False
         self._label4_start_time = 0.0
@@ -411,4 +411,4 @@ class Example(Base):
         self.renderer.render(self.scene, self.camera)
 
 
-Example(screen_size=[1700, 1500]).run()
+Example(screen_size=[800, 600]).run()
