@@ -44,15 +44,15 @@ class Example(Base):
         ambient_light = AmbientLight(color=[0.1 * n, 0.1 * n, 0.1 * n])
         self.scene.add(ambient_light)
 
-        m = 1.5
+        m = 1
         self.directional_light = DirectionalLight(color=[0.8 * m, 0.8 * m, 0.8 * m], direction=[-1, -1, -2])
         self.scene.add(self.directional_light)
 
         self.sun_light_helper = SunLightHelper(self.directional_light, size=9)
         self.sun_light_helper.set_position([0, 0, 11])
 
-        self.directional_light.set_position([30, 30, 30])
-        self.directional_light.set_direction([10, -50, -90])
+        #self.directional_light.set_position([30, 30, 30])
+        #self.directional_light.set_direction([10, -1, -90])
         #self.directional_light.set_position([70, 80, -95])
         #self.directional_light.set_direction([0, -50, -90])
 
@@ -63,14 +63,14 @@ class Example(Base):
 
         #--------------------------------------------------------------CEU-------------------------------------------------------------
 
-        sky_geometry = SphereGeometry(radius=150)
+        sky_geometry = SphereGeometry(radius=250)
         sky_material = TextureMaterial(texture=Texture(file_name="images/sky.jpg"))
         sky = Mesh(sky_geometry, sky_material)
         sky.rotate_y(2 * math.pi / 5)
         self.scene.add(sky)
 
         #-----------------------------------------------------------ALCATRAO-----------------------------------------------------------
-        vertices, tex_coords = my_obj_reader('alcatrao.obj')
+        vertices, tex_coords = my_obj_reader('mapa_objs/alcatrao.obj')
 
         repeat_factor = 5.0
 
@@ -89,7 +89,7 @@ class Example(Base):
         self.scene.add(alcatrao)
 
         #-----------------------------------------------------------PASSEIO-----------------------------------------------------------
-        vertices, tex_coords = my_obj_reader('passeio.obj')
+        vertices, tex_coords = my_obj_reader('mapa_objs/passeio.obj')
 
         repeat_factor = 30
 
@@ -109,7 +109,7 @@ class Example(Base):
 
         #-----------------------------------------------------------CALÇADA-----------------------------------------------------------
 
-        vertices, tex_coords = my_obj_reader('calcada1.obj')
+        vertices, tex_coords = my_obj_reader('mapa_objs/calcada1.obj')
 
         repeat_factor = 1
 
@@ -127,7 +127,7 @@ class Example(Base):
 
         self.scene.add(calcada1)
         #-----------------------------------calçada2------------------------------------------
-        vertices, tex_coords = my_obj_reader('calcada2.obj')
+        vertices, tex_coords = my_obj_reader('mapa_objs/calcada2.obj')
 
         repeat_factor = 1
 
@@ -146,7 +146,7 @@ class Example(Base):
         self.scene.add(calcada2)
 
         # -----------------------------------calçada3------------------------------------------
-        vertices, tex_coords = my_obj_reader('calcada3.obj')
+        vertices, tex_coords = my_obj_reader('mapa_objs/calcada3.obj')
 
         repeat_factor = 1
 
@@ -165,7 +165,7 @@ class Example(Base):
         self.scene.add(calcada3)
 
         # -----------------------------------calçada4------------------------------------------
-        vertices, tex_coords = my_obj_reader('calcada4.obj')
+        vertices, tex_coords = my_obj_reader('mapa_objs/calcada4.obj')
 
         repeat_factor = 1
 
@@ -187,7 +187,7 @@ class Example(Base):
 
         # -----------------------------------------------------------CERCA-----------------------------------------------------------
 
-        vertices, tex_coords = my_obj_reader('cerca.obj')
+        vertices, tex_coords = my_obj_reader('mapa_objs/cerca.obj')
 
         repeat_factor = 1
 
@@ -207,7 +207,7 @@ class Example(Base):
 
         # -----------------------------------------------------------FONTE-----------------------------------------------------------
 
-        vertices, tex_coords = my_obj_reader('fonte.obj')
+        vertices, tex_coords = my_obj_reader('mapa_objs/fonte.obj')
 
         repeat_factor = 0.5
 
@@ -227,7 +227,7 @@ class Example(Base):
 
         # -----------------------------------------------------------PALCO-----------------------------------------------------------
 
-        vertices, tex_coords = my_obj_reader('palco.obj')
+        vertices, tex_coords = my_obj_reader('mapa_objs/palco.obj')
 
         repeat_factor = 1
 
@@ -247,7 +247,7 @@ class Example(Base):
 
         # -----------------------------------------------------------Bancos-----------------------------------------------------------
 
-        vertices, tex_coords = my_obj_reader('bancos.obj')
+        vertices, tex_coords = my_obj_reader('mapa_objs/bancos.obj')
 
         bancos_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
 
@@ -263,10 +263,10 @@ class Example(Base):
 
         # -----------------------------------------------------------PREDIO_1-----------------------------------------------------------
 
-        vertices, tex_coords = my_obj_reader('predio1.obj')
-        repeat_factor = 2
+        vertices, tex_coords = my_obj_reader('mapa_objs/predio1.obj')
+        repeat_factor = 5
 
-        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
+        tex_coords = [[u * repeat_factor, v/3 * repeat_factor] for u, v in tex_coords]
         predio1_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
 
         predio1_material = PhongMaterial(
@@ -281,7 +281,7 @@ class Example(Base):
 
         # -----------------------------------------------------------PREDIO_2-----------------------------------------------------------
 
-        vertices, tex_coords = my_obj_reader('predio2.obj')
+        vertices, tex_coords = my_obj_reader('mapa_objs/predio2.obj')
         repeat_factor = 3
 
         tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
@@ -299,7 +299,7 @@ class Example(Base):
 
         # -----------------------------------------------------------PREDIO_3-----------------------------------------------------------
 
-        vertices, tex_coords = my_obj_reader('predio3.obj')
+        vertices, tex_coords = my_obj_reader('mapa_objs/predio3.obj')
         repeat_factor = 2
 
         tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
@@ -315,6 +315,242 @@ class Example(Base):
 
         self.scene.add(predio3)
 
+        # -----------------------------------------------------------PREDIO_4-----------------------------------------------------------
+
+        vertices, tex_coords = my_obj_reader('mapa_objs/predio4.obj')
+        repeat_factor = 8
+
+        tex_coords = [[u * repeat_factor, v/2.3 * repeat_factor] for u, v in tex_coords]
+        predio4_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
+
+        predio4_material = PhongMaterial(
+            texture=Texture("images/predio4.jpg"),
+            number_of_light_sources=2,
+            use_shadow=True
+        )
+
+        predio4 = Mesh(predio4_geometry, predio4_material)
+
+        self.scene.add(predio4)
+
+        # -----------------------------------------------------------PREDIO_5-----------------------------------------------------------
+
+        vertices, tex_coords = my_obj_reader('mapa_objs/predio5.obj')
+        repeat_factor = 8
+
+        tex_coords = [[u * repeat_factor, v / 1.5 * repeat_factor] for u, v in tex_coords]
+        predio5_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
+
+        predio5_material = PhongMaterial(
+            texture=Texture("images/predio6.jpg"),
+            number_of_light_sources=2,
+            use_shadow=True
+        )
+
+        predio5 = Mesh(predio5_geometry, predio5_material)
+
+        self.scene.add(predio5)
+
+        # -----------------------------------------------------------PREDIO_6-----------------------------------------------------------
+
+        vertices, tex_coords = my_obj_reader('mapa_objs/predio6.obj')
+        repeat_factor = 4
+
+        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
+        predio4_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
+
+        predio4_material = PhongMaterial(
+            texture=Texture("images/predio5.jpg"),
+            number_of_light_sources=2,
+            use_shadow=True
+        )
+
+        predio4 = Mesh(predio4_geometry, predio4_material)
+
+        self.scene.add(predio4)
+
+        # -----------------------------------------------------------PREDIO_7-----------------------------------------------------------
+
+        vertices, tex_coords = my_obj_reader('mapa_objs/predio7.obj')
+        repeat_factor = 8
+
+        tex_coords = [[u * repeat_factor, v/3 * repeat_factor] for u, v in tex_coords]
+        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
+
+        predio_material = PhongMaterial(
+            texture=Texture("images/predio7.jpg"),
+            number_of_light_sources=2,
+            use_shadow=True
+        )
+
+        predio = Mesh(predio_geometry, predio_material)
+
+        self.scene.add(predio)
+
+        # -----------------------------------------------------------PREDIO_8-----------------------------------------------------------
+
+        vertices, tex_coords = my_obj_reader('mapa_objs/predio8.obj')
+        repeat_factor = 8
+
+        tex_coords = [[u * repeat_factor, v / 2.3 * repeat_factor] for u, v in tex_coords]
+        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
+
+        predio_material = PhongMaterial(
+            texture=Texture("images/predio8.jpg"),
+            number_of_light_sources=2,
+            use_shadow=True
+        )
+
+        predio = Mesh(predio_geometry, predio_material)
+
+        self.scene.add(predio)
+
+        # -----------------------------------------------------------PREDIO_9-----------------------------------------------------------
+
+        vertices, tex_coords = my_obj_reader('mapa_objs/predio9.obj')
+        repeat_factor = 12
+
+        tex_coords = [[u * repeat_factor, v / 7  * repeat_factor] for u, v in tex_coords]
+        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
+
+        predio_material = PhongMaterial(
+            texture=Texture("images/predio9.jpeg"),
+            number_of_light_sources=2,
+            use_shadow=True
+        )
+
+        predio = Mesh(predio_geometry, predio_material)
+
+        self.scene.add(predio)
+
+        # -----------------------------------------------------------PREDIO_10-----------------------------------------------------------
+
+        vertices, tex_coords = my_obj_reader('mapa_objs/predio10.obj')
+        repeat_factor = 8
+
+        tex_coords = [[u * repeat_factor, v / 3 * repeat_factor] for u, v in tex_coords]
+        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
+
+        predio_material = PhongMaterial(
+            texture=Texture("images/predio10.jpg"),
+            number_of_light_sources=2,
+            use_shadow=True
+        )
+
+        predio = Mesh(predio_geometry, predio_material)
+
+        self.scene.add(predio)
+
+        # -----------------------------------------------------------PREDIO_11-----------------------------------------------------------
+
+        vertices, tex_coords = my_obj_reader('mapa_objs/predio11.obj')
+        repeat_factor = 8
+
+        tex_coords = [[u * repeat_factor, v / 3 * repeat_factor] for u, v in tex_coords]
+        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
+
+        predio_material = PhongMaterial(
+            texture=Texture("images/predio7.jpg"),
+            number_of_light_sources=2,
+            use_shadow=True
+        )
+
+        predio = Mesh(predio_geometry, predio_material)
+
+        self.scene.add(predio)
+
+        # -----------------------------------------------------------PREDIO_12-----------------------------------------------------------
+
+        vertices, tex_coords = my_obj_reader('mapa_objs/predio12.obj')
+        repeat_factor = 8
+
+        tex_coords = [[u * repeat_factor, v / 4 * repeat_factor] for u, v in tex_coords]
+        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
+
+        predio_material = PhongMaterial(
+            texture=Texture("images/predio8.jpg"),
+            number_of_light_sources=2,
+            use_shadow=True
+        )
+
+        predio = Mesh(predio_geometry, predio_material)
+
+        self.scene.add(predio)
+
+        # -----------------------------------------------------------PREDIO_13-----------------------------------------------------------
+
+        vertices, tex_coords = my_obj_reader('mapa_objs/predio13.obj')
+        repeat_factor = 8
+
+        tex_coords = [[u * repeat_factor, v / 2.3 * repeat_factor] for u, v in tex_coords]
+        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
+
+        predio_material = PhongMaterial(
+            texture=Texture("images/predio4.jpg"),
+            number_of_light_sources=2,
+            use_shadow=True
+        )
+
+        predio = Mesh(predio_geometry, predio_material)
+
+        self.scene.add(predio)
+
+        # -----------------------------------------------------------PREDIO_14-----------------------------------------------------------
+
+        vertices, tex_coords = my_obj_reader('mapa_objs/predio14.obj')
+        repeat_factor = 8
+
+        tex_coords = [[u * repeat_factor, v / 2.3 * repeat_factor] for u, v in tex_coords]
+        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
+
+        predio_material = PhongMaterial(
+            texture=Texture("images/predio11.jpg"),
+            number_of_light_sources=2,
+            use_shadow=True
+        )
+
+        predio = Mesh(predio_geometry, predio_material)
+
+        self.scene.add(predio)
+
+        # -----------------------------------------------------------PREDIO_15-----------------------------------------------------------
+
+        vertices, tex_coords = my_obj_reader('mapa_objs/predio15.obj')
+        repeat_factor = 8
+
+        tex_coords = [[u * repeat_factor, v / 2.3 * repeat_factor] for u, v in tex_coords]
+        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
+
+        predio_material = PhongMaterial(
+            texture=Texture("images/predio4.jpg"),
+            number_of_light_sources=2,
+            use_shadow=True
+        )
+
+        predio = Mesh(predio_geometry, predio_material)
+
+        self.scene.add(predio)
+
+        # -----------------------------------------------------------LOJA-----------------------------------------------------------
+
+        vertices, tex_coords = my_obj_reader('mapa_objs/loja.obj')
+        repeat_factor = 8
+
+        tex_coords = [[u/1.66 * repeat_factor, v  * repeat_factor] for u, v in tex_coords]
+        loja_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
+
+        loja_material = PhongMaterial(
+            texture=Texture("images/predio_loja.jpg"),
+            number_of_light_sources=2,
+            use_shadow=True
+        )
+
+        loja = Mesh(loja_geometry, loja_material)
+
+        self.scene.add(loja)
+
+        self.directional_light.set_position([30, 30, 30])
+        self.directional_light.set_direction([10, -1, -90])
 
        # grass_geometry = RectangleGeometry(width=100, height=100)
        # grass_material = TextureMaterial(
