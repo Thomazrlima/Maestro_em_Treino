@@ -196,7 +196,7 @@ class Example(Base):
            filepath='used_sounds/FitHarmonica/DoMaior.mp3'
         )
 
-        self.audio.volume_to(0.3)
+        self.audio.volume_to(1)
 
         self._label4_active = False
         self._label4_start_time = 0.0
