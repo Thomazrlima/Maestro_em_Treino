@@ -195,6 +195,7 @@ class Example(Base):
         )
 
         self.audio.set_master_volume(1)
+        self.audio.set_sound_volume('blowI', 2)
 
     def start_animation(self, key):
         if key in self.animations:
@@ -754,7 +755,6 @@ class Example(Base):
         self.directional_light.set_direction([10, -1, -90])
 
     def update(self):
-        self.audio.set_sound_volume('blowI', 2)
         for key in self.animations:
             if self.input.is_key_pressed(key) and not self.animation_active:
                 if self.input.is_key_down('q'):

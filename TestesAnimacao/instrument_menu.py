@@ -74,10 +74,11 @@ class Button:
 
 def instrument_menu():
     buttons = [
-        Button(SCREEN_WIDTH // 2 - 150, 180, 300, 60, "Harmónica", "harmonica.py"),
-        Button(SCREEN_WIDTH // 2 - 150, 260, 300, 60, "Gaita", "gaita.py"),
-        Button(SCREEN_WIDTH // 2 - 150, 340, 300, 60, "Concertina", "concertina.py"),
-        Button(SCREEN_WIDTH // 2 - 150, 420, 300, 60, "Triângulo", "triangulo.py")
+        Button(SCREEN_WIDTH // 2 - 150, 180, 300, 60, "Mapa", "Mapa.py"),
+        Button(SCREEN_WIDTH // 2 - 150, 260, 300, 60, "Harmónica", "harmonica.py"),
+        Button(SCREEN_WIDTH // 2 - 150, 340, 300, 60, "Gaita", "gaita.py"),
+        Button(SCREEN_WIDTH // 2 - 150, 420, 300, 60, "Concertina", "concertina.py"),
+        Button(SCREEN_WIDTH // 2 - 150, 500, 300, 60, "Triângulo", "triangulo.py")
     ]
 
     font_large = pygame.font.SysFont(None, 75)
