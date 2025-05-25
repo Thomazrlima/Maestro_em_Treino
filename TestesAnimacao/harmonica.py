@@ -263,8 +263,8 @@ class Example(Base):
             movement_progress = math.sin(progress * math.pi)
         
         displacement = [
-            direction[0] * intensity * movement_progress,
-            direction[1] * intensity * movement_progress,
+            direction[0] * intensity * movement_progress * 2,
+            direction[1] * intensity * movement_progress * 2,
             0
         ]
         
