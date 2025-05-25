@@ -61,16 +61,17 @@ class ConcertinaAnimation(Base):
         dir_uv = np.array(dir_uv, dtype=np.float32)
 
         preto = TextureMaterial(Texture("images/preto.jpg"))
+        print(f"Número total de vértices em 'esq': {len(esq_v) // 3}")
 
         self.sanfonadir = Mesh(customGeometry(1, 1, 1,
-                                              dir_v[0:10401].tolist(),
-                                              dir_uv[0:10401].tolist()), vermelho)
+                                              dir_v[0:3623].tolist(),
+                                              dir_uv[0:3623].tolist()), vermelho)
         self.sanfonadirbra = Mesh(customGeometry(1, 1, 1,
-                                                 dir_v[10401:11421].tolist(),
-                                                 dir_uv[10401:11421].tolist()), preto)
+                                                 dir_v[3624:4400].tolist(),
+                                                 dir_uv[3624:4400].tolist()), preto)
         self.sanfonadirpreto = Mesh(customGeometry(1, 1, 1,
-                                                   dir_v[11421:12877].tolist(),
-                                                   dir_uv[11421:12877].tolist()), branco1)
+                                                   dir_v[4401:9164].tolist(),
+                                                   dir_uv[4401:9164].tolist()), branco1)
 
         self.sanfonadir.set_position([0, 0, 0])
         self.sanfonadirbra.set_position([0, 0, 0])
