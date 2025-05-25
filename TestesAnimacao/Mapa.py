@@ -32,8 +32,6 @@ class Example(Base):
     """
     def initialize(self):
         print("Initializing program...")
-        self.tutorial = False
-
         self.renderer = Renderer()
         self.scene = Scene()
         self.camera = Camera(aspect_ratio=1700 / 1300)
@@ -53,8 +51,8 @@ class Example(Base):
         self.sun_light_helper = SunLightHelper(self.directional_light, size=9)
         self.sun_light_helper.set_position([0, 0, 11])
 
-        self.directional_light.set_position([40, 30, 30])
-        self.directional_light.set_direction([0, -50, -90])
+        self.directional_light.set_position([30, 30, 30])
+        self.directional_light.set_direction([10, -50, -90])
         #self.directional_light.set_position([70, 80, -95])
         #self.directional_light.set_direction([0, -50, -90])
 
