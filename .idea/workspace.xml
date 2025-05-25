@@ -6,8 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="b12815cd-b211-49b2-89f2-9d4fe0412dcd" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TestesAnimacao/extras/movement_rig.py" beforeDir="false" afterPath="$PROJECT_DIR$/TestesAnimacao/extras/movement_rig.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TestesAnimacao/harmonica.py" beforeDir="false" afterPath="$PROJECT_DIR$/TestesAnimacao/harmonica.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TestesAnimacao/light/ambient_light.py" beforeDir="false" afterPath="$PROJECT_DIR$/TestesAnimacao/light/ambient_light.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -30,26 +30,26 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.Mapa.executor": "Run",
-    "Python.ambient_light.executor": "Run",
-    "Python.concertina.executor": "Run",
-    "Python.custom.executor": "Run",
-    "Python.gaita.executor": "Run",
-    "Python.harmonica.executor": "Run",
-    "Python.harmonica_tutorial.executor": "Run",
-    "Python.instrument_menu.executor": "Run",
-    "Python.menu.executor": "Run",
-    "Python.movement_rig.executor": "Run",
-    "Python.triangulo.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "merge",
-    "last_opened_file_path": "/home/nanashi/Desktop/CG_Projeto/Maestro_em_Treino/TestesAnimacao/instrumentos",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.Mapa.executor&quot;: &quot;Run&quot;,
+    &quot;Python.ambient_light.executor&quot;: &quot;Run&quot;,
+    &quot;Python.concertina.executor&quot;: &quot;Run&quot;,
+    &quot;Python.custom.executor&quot;: &quot;Run&quot;,
+    &quot;Python.gaita.executor&quot;: &quot;Run&quot;,
+    &quot;Python.harmonica.executor&quot;: &quot;Run&quot;,
+    &quot;Python.harmonica_tutorial.executor&quot;: &quot;Run&quot;,
+    &quot;Python.instrument_menu.executor&quot;: &quot;Run&quot;,
+    &quot;Python.menu.executor&quot;: &quot;Run&quot;,
+    &quot;Python.movement_rig.executor&quot;: &quot;Run&quot;,
+    &quot;Python.triangulo.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;merge&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/nanashi/Desktop/CG_Projeto/Maestro_em_Treino/TestesAnimacao/instrumentos&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/Maestro_em_Treino/TestesAnimacao/instrumentos" />
