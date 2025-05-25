@@ -68,8 +68,8 @@ class Button:
 
 def main_menu():
     buttons = [
-        Button(SCREEN_WIDTH // 2 - 150, 240, 300, 60, "Jogar", "concertina.py"),
-        Button(SCREEN_WIDTH // 2 - 150, 320, 300, 60, "Tutorial", "harmonica.py"),
+        Button(SCREEN_WIDTH // 2 - 150, 240, 300, 60, "Jogar", "instrument_menu.py"),
+        Button(SCREEN_WIDTH // 2 - 150, 320, 300, 60, "Tutorial", "harmonica_tutorial.py"),
         Button(SCREEN_WIDTH // 2 - 150, 400, 300, 60, "Sair", "exit")
     ]
 
