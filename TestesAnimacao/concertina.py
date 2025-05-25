@@ -43,11 +43,11 @@ class ConcertinaAnimation(Base):
         escuro = TextureMaterial(Texture("images/escuro.jpg"))
 
         self.sanfonaesq = Mesh(customGeometry(1, 1, 1,
-                                              esq_v[0:5375].tolist(),
-                                              esq_uv[0:5375].tolist()), vermelho)
+                                              esq_v[0:5376].tolist(),
+                                              esq_uv[0:5376].tolist()), vermelho)
         self.sanfonaver = Mesh(customGeometry(1, 1, 1,
-                                              esq_v[5376:7800].tolist(),
-                                              esq_uv[5376:7800].tolist()), escuro)
+                                              esq_v[5376:7801].tolist(),
+                                              esq_uv[5376:7801].tolist()), escuro)
         self.sanfonabra = Mesh(customGeometry(1, 1, 1,
                                               esq_v[7801:17280].tolist(),
                                               esq_uv[7801:17280].tolist()), branco1)
@@ -63,14 +63,14 @@ class ConcertinaAnimation(Base):
         preto = TextureMaterial(Texture("images/preto.jpg"))
 
         self.sanfonadir = Mesh(customGeometry(1, 1, 1,
-                                              dir_v[0:10400].tolist(),
-                                              dir_uv[0:10400].tolist()), vermelho)
+                                              dir_v[0:10401].tolist(),
+                                              dir_uv[0:10401].tolist()), vermelho)
         self.sanfonadirbra = Mesh(customGeometry(1, 1, 1,
-                                                 dir_v[10401:11420].tolist(),
-                                                 dir_uv[10401:11420].tolist()), preto)
+                                                 dir_v[10401:11421].tolist(),
+                                                 dir_uv[10401:11421].tolist()), preto)
         self.sanfonadirpreto = Mesh(customGeometry(1, 1, 1,
-                                                   dir_v[11421:12876].tolist(),
-                                                   dir_uv[11421:12876].tolist()), branco1)
+                                                   dir_v[11421:12877].tolist(),
+                                                   dir_uv[11421:12877].tolist()), branco1)
 
         self.sanfonadir.set_position([0, 0, 0])
         self.sanfonadirbra.set_position([0, 0, 0])
