@@ -32,7 +32,9 @@ class Example(Base):
         self.renderer = Renderer()
         self.scene = Scene()
         self.camera = Camera(aspect_ratio=800 / 600)
-        self.camera.set_position([10, 7, 0])
+        self.camera.rotate_y(math.pi / 2)
+        self.camera.rotate_x(-math.pi / 6)
+        self.camera.set_position([27, 6, 0])
         #self.rig2 = MovementRig()
         #self.rig2.add(self.camera)
         #self.scene.add(self.rig2)
@@ -41,7 +43,8 @@ class Example(Base):
         
         self.rig = MovementRig()
         self.rig.set_position([0.5, 0.8, 3])
-        self.rig.rotate_y(math.pi / 2)
+        self.rig.rotate_y(math.pi)
+        self.rig.rotate_z(-math.pi / 4)
         self.rig.disable_movement()
 
 
@@ -107,15 +110,55 @@ class Example(Base):
         main_material = TextureMaterial(texture=main_texture, property_dict={"repeatUV": [7, 2]})
 #        main_material = TextureMaterial(texture=main_texture)
 
+        x = -20.7
+        y = -14.8
+        z = 3
+        angulo = 0
+
         cima_peq = Mesh(cima_peq_geometry, cima_peq_material)
+        cima_peq.rotate_x(angulo)
+        cima_peq.set_position([x, y, z])
+        #cima_peq.translate(x=x, y=y, z=z, local=False)
+
         sphere = Mesh(sphere_geometry, sphere_material)
+        sphere.rotate_x(angulo)
+        sphere.set_position([x, y, z])
+        #sphere.translate(x=x, y=y, z=z, local=False)
+
         sphere2 = Mesh(sphere2_geometry, sphere2_material)
+        sphere2.rotate_x(angulo)
+        sphere2.set_position([x, y, z])
+        #sphere2.translate(x=x, y=y, z=z, local=False)
+
         baixo = Mesh(baixo_geometry, baixo_material)
+        baixo.rotate_x(angulo)
+        baixo.set_position([x, y, z])
+        #baixo.translate(x=x, y=y, z=z, local=False)
+
         cima = Mesh(cima_geometry, cima_material)
+        cima.rotate_x(angulo)
+        cima.set_position([x, y, z])
+        #cima.translate(x=x, y=y, z=z, local=False)
+
         baixo_peq = Mesh(baixo_peq_geometry, baixo_peq_material)
+        baixo_peq.rotate_x(angulo)
+        baixo_peq.set_position([x, y, z])
+        #baixo_peq.translate(x=x, y=y, z=z, local=False)
+
         sphere2_baixo = Mesh(sphere2_baixo_geometry, sphere2_baixo_material)
+        sphere2_baixo.rotate_x(angulo)
+        sphere2_baixo.set_position([x, y, z])
+        #sphere2_baixo.translate(x=x, y=y, z=z, local=False)
+
         sphere_baixo = Mesh(sphere_baixo_geometry, sphere_baixo_material)
+        sphere_baixo.rotate_x(angulo)
+        sphere_baixo.set_position([x, y, z])
+        #sphere_baixo.translate(x=x, y=y, z=z, local=False)
+
         main = Mesh(main_geometry, main_material)
+        main.rotate_x(angulo)
+        main.set_position([x, y, z])
+        #main.translate(x=x, y=y, z=z, local=False)
 
         self.rig.add(cima_peq)
         self.rig.add(sphere)
@@ -194,8 +237,7 @@ class Example(Base):
            filepath='used_sounds/FitHarmonica/DoMaior.mp3'
         )
 
-        self.audio.set_master_volume(1)
-        self.audio.set_sound_volume('blowI', 2)
+        self.audio.set_master_volume(0.05)
 
     def start_animation(self, key):
         if key in self.animations:
@@ -236,11 +278,11 @@ class Example(Base):
         ]
         
         new_position = [
-            self.animation_start_position[0] + displacement[0],
+            self.animation_start_position[0] ,
             self.animation_start_position[1] + displacement[1],
-            self.animation_start_position[2]
+            self.animation_start_position[2] + displacement[0]
         ]
-        
+
         self.rig.set_position(new_position)
 
     def init_map(self):
@@ -755,6 +797,7 @@ class Example(Base):
         self.directional_light.set_direction([10, -1, -90])
 
     def update(self):
+        self.audio.set_sound_volume('blowI', 2)
         for key in self.animations:
             if self.input.is_key_pressed(key) and not self.animation_active:
                 if self.input.is_key_down('q'):

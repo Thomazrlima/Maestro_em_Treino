@@ -84,81 +84,81 @@ class MovementRig(Object3D):
         sprint_active = input_object.is_key_pressed(self.KEY_SPRINT)
         crouching = input_object.is_key_pressed(self.KEY_CROUCH)
         speed_multiplier = 1.0
+        if self._movement_enabled:
+            if sprint_active and not crouching:
+                speed_multiplier *= self.SPRINT_MULTIPLIER
+            if crouching:
+                speed_multiplier *= self.CROUCH_FACTOR
 
-        if sprint_active and not crouching:
-            speed_multiplier *= self.SPRINT_MULTIPLIER
-        if crouching:
-            speed_multiplier *= self.CROUCH_FACTOR
+            if input_object.is_key_down(self.KEY_JUMP) and self.is_grounded and not crouching:
+                self.is_jumping = True
+                self.is_grounded = False
+                self.jump_velocity = math.sqrt(2 * self.GRAVITY * self.JUMP_HEIGHT)
 
-        if input_object.is_key_down(self.KEY_JUMP) and self.is_grounded and not crouching:
-            self.is_jumping = True
-            self.is_grounded = False
-            self.jump_velocity = math.sqrt(2 * self.GRAVITY * self.JUMP_HEIGHT)
+            if not self.is_grounded:
+                self.jump_velocity -= self.GRAVITY * delta_time * 1.5
+                height_change = self.jump_velocity * delta_time
+                self._current_height += height_change
 
-        if not self.is_grounded:
-            self.jump_velocity -= self.GRAVITY * delta_time * 1.5
-            height_change = self.jump_velocity * delta_time
-            self._current_height += height_change
+                if self._current_height <= 0:
+                    self._current_height = 0
+                    self.is_grounded = True
+                    self.is_jumping = False
+                    self.jump_velocity = 0
 
-            if self._current_height <= 0:
-                self._current_height = 0
-                self.is_grounded = True
-                self.is_jumping = False
-                self.jump_velocity = 0
+                self._look_attachment.translate(0, height_change, 0, local=False)
 
-            self._look_attachment.translate(0, height_change, 0, local=False)
+            if crouching and self.is_grounded:
+                self._target_height = self.CROUCH_HEIGHT
+                height_diff = self._target_height - self._current_height
+                if abs(height_diff) > 0.01:
+                    move = height_diff * self.HEIGHT_SPEED * delta_time
+                    self._current_height += move
+                    self._look_attachment.translate(0, move, 0, local=False)
+            elif not crouching and self.is_grounded and not self.is_jumping:
+                self._target_height = 0
+                height_diff = self._target_height - self._current_height
+                if abs(height_diff) > 0.01:
+                    move = height_diff * self.HEIGHT_SPEED * delta_time
+                    self._current_height += move
+                    self._look_attachment.translate(0, move, 0, local=False)
 
-        if crouching and self.is_grounded:
-            self._target_height = self.CROUCH_HEIGHT
-            height_diff = self._target_height - self._current_height
-            if abs(height_diff) > 0.01:
-                move = height_diff * self.HEIGHT_SPEED * delta_time
-                self._current_height += move
-                self._look_attachment.translate(0, move, 0, local=False)
-        elif not crouching and self.is_grounded and not self.is_jumping:
-            self._target_height = 0
-            height_diff = self._target_height - self._current_height
-            if abs(height_diff) > 0.01:
-                move = height_diff * self.HEIGHT_SPEED * delta_time
-                self._current_height += move
-                self._look_attachment.translate(0, move, 0, local=False)
+            if input_object.is_key_pressed(self.KEY_MOVE_FORWARDS):
+                if self._can_move(0, -move_amount * 7 * speed_multiplier):
+                    self.translate(0, 0, -move_amount * 7 * speed_multiplier)
+            if input_object.is_key_pressed(self.KEY_MOVE_BACKWARDS):
+                if self._can_move(0, move_amount * 6 * speed_multiplier):
+                    self.translate(0, 0, move_amount * 6 * speed_multiplier)
+            if input_object.is_key_pressed(self.KEY_MOVE_LEFT):
+                if self._can_move(-move_amount * 7 * speed_multiplier, 0):
+                    self.translate(-move_amount * 7 * speed_multiplier, 0, 0)
+            if input_object.is_key_pressed(self.KEY_MOVE_RIGHT):
+                if self._can_move(move_amount * 7 * speed_multiplier, 0):
+                    self.translate(move_amount * 7 * speed_multiplier, 0, 0)
 
-        if input_object.is_key_pressed(self.KEY_MOVE_FORWARDS):
-            if self._can_move(0, -move_amount * 7 * speed_multiplier):
-                self.translate(0, 0, -move_amount * 7 * speed_multiplier)
-        if input_object.is_key_pressed(self.KEY_MOVE_BACKWARDS):
-            if self._can_move(0, move_amount * 6 * speed_multiplier):
-                self.translate(0, 0, move_amount * 6 * speed_multiplier)
-        if input_object.is_key_pressed(self.KEY_MOVE_LEFT):
-            if self._can_move(-move_amount * 7 * speed_multiplier, 0):
-                self.translate(-move_amount * 7 * speed_multiplier, 0, 0)
-        if input_object.is_key_pressed(self.KEY_MOVE_RIGHT):
-            if self._can_move(move_amount * 7 * speed_multiplier, 0):
-                self.translate(move_amount * 7 * speed_multiplier, 0, 0)
+            if input_object.mouse_captured:
+                rel_x, rel_y = input_object.mouse_rel
 
-        if input_object.mouse_captured:
-            rel_x, rel_y = input_object.mouse_rel
+                yaw_change = -rel_x * self._mouse_sensitivity
+                pitch_change = -rel_y * self._mouse_sensitivity
 
-            yaw_change = -rel_x * self._mouse_sensitivity
-            pitch_change = -rel_y * self._mouse_sensitivity
+                self.rotate_y(yaw_change, True)
+                self._current_yaw += yaw_change
 
-            self.rotate_y(yaw_change, True)
-            self._current_yaw += yaw_change
+                new_pitch = self._current_pitch + pitch_change
+                if abs(new_pitch) < math.pi / 2:
+                    self._look_attachment.rotate_x(pitch_change, True)
+                    self._current_pitch = new_pitch
 
-            new_pitch = self._current_pitch + pitch_change
-            if abs(new_pitch) < math.pi / 2:
-                self._look_attachment.rotate_x(pitch_change, True)
-                self._current_pitch = new_pitch
-
-            if pygame.display.get_init():
-                center = pygame.display.get_surface().get_rect().center
-                pygame.mouse.set_pos(center)
-        else:
-            if input_object.is_key_pressed(self.KEY_TURN_RIGHT):
-                self.rotate_y(-rotate_amount, True)
-            if input_object.is_key_pressed(self.KEY_TURN_LEFT):
-                self.rotate_y(rotate_amount, True)
-            if input_object.is_key_pressed(self.KEY_LOOK_UP):
-                self._look_attachment.rotate_x(-rotate_amount, True)
-            if input_object.is_key_pressed(self.KEY_LOOK_DOWN):
-                self._look_attachment.rotate_x(rotate_amount, True)
+                if pygame.display.get_init():
+                    center = pygame.display.get_surface().get_rect().center
+                    pygame.mouse.set_pos(center)
+            else:
+                if input_object.is_key_pressed(self.KEY_TURN_RIGHT):
+                    self.rotate_y(-rotate_amount, True)
+                if input_object.is_key_pressed(self.KEY_TURN_LEFT):
+                    self.rotate_y(rotate_amount, True)
+                if input_object.is_key_pressed(self.KEY_LOOK_UP):
+                    self._look_attachment.rotate_x(-rotate_amount, True)
+                if input_object.is_key_pressed(self.KEY_LOOK_DOWN):
+                    self._look_attachment.rotate_x(rotate_amount, True)
