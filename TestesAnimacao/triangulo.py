@@ -42,6 +42,7 @@ class TriangleAnimation(Base):
         self.rig = MovementRig()
         self.rig.add(self.triangle)
         self.rig.add(self.drumstick)
+        self.rig.rotate_y(math.pi/2)
         self.camera.rotate_y(math.pi / 2)
         self.camera.rotate_x(-math.pi / 7)
         self.camera.set_position([27, 8, 0])
@@ -64,9 +65,9 @@ class TriangleAnimation(Base):
         self.drumstick_progress = 0
 
     def load_objects(self):
-        x = 21
+        x = -2
         y = 6
-        z = 0
+        z = 21
         angulo = 0
 
         triangle_vertices = my_obj_reader1('instrumentos/triangulo.obj')
@@ -80,7 +81,6 @@ class TriangleAnimation(Base):
         self.triangle = Mesh(geometry, material)
         self.triangle.rotate_x(angulo)
         self.triangle.set_position([x, y, z])
-        self.triangle.set_position([0, 2, 0])
 
         drumstick_vertices = my_obj_reader1('instrumentos/baqueta.obj')
         drumstick_centered = np.array(drumstick_vertices)
@@ -88,9 +88,8 @@ class TriangleAnimation(Base):
         material = SurfaceMaterial(property_dict={"useVertexColors": True})
         self.drumstick = Mesh(geometry, material)
         self.drumstick.rotate_x(angulo)
-        self.drumstick.set_position([x, y, z])
-        self.drumstick.set_position([1, 1, 0])
-        self.drumstick_initial_position = [1, 1, 0]
+        self.drumstick.set_position([x+1, y-1, z])
+        self.drumstick_initial_position = [x+1, y-1, z]
 
     def hit_triangle(self):
         self.drumstick_state = "moving_forward"
@@ -103,9 +102,9 @@ class TriangleAnimation(Base):
             self.drumstick_progress = min(1.0, (self.time - self.hit_time) / 0.4)
 
             self.drumstick.set_position([
-                1 - self.drumstick_progress * 0.8,
-                1 - self.drumstick_progress * 0.4,
-                0
+                self.drumstick_initial_position[0] - self.drumstick_progress * 0.8,
+                self.drumstick_initial_position[1] - self.drumstick_progress * 0.4,
+                self.drumstick_initial_position[2]
             ])
             self.drumstick.set_rotation([0, 0, -self.drumstick_progress * math.pi / 4])
 
@@ -118,9 +117,9 @@ class TriangleAnimation(Base):
             self.drumstick_progress = min(1.0, (self.time - self.hit_time) / 0.4)
 
             self.drumstick.set_position([
-                0.2 + self.drumstick_progress * 0.8,
-                0.6 + self.drumstick_progress * 0.4,
-                0
+                self.drumstick_initial_position[0] - 0.8 + self.drumstick_progress * 0.8,
+                self.drumstick_initial_position[1] - 0.4 + self.drumstick_progress * 0.4,
+                self.drumstick_initial_position[2]
             ])
             self.drumstick.set_rotation([
                 0,
