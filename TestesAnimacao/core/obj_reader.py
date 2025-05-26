@@ -1,4 +1,4 @@
-def my_obj_reader(filename: str) -> list:
+def my_obj_reader1(filename: str) -> list:
     """Get the vertices from the OBJ file (considering v/vt/vn format)."""
     position_list = list()
     vertices = list()

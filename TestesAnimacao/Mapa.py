@@ -39,8 +39,9 @@ class Example(Base):
         self.rig.add(self.camera)
         self.scene.add(self.rig)
         self.rig.set_position([0, 5, 4])
+        self.rig.enable_movement()
 
-        n = 0
+        n = 0.3
         ambient_light = AmbientLight(color=[0.1 * n, 0.1 * n, 0.1 * n])
         self.scene.add(ambient_light)
 
@@ -49,12 +50,12 @@ class Example(Base):
         self.scene.add(self.directional_light)
 
         self.sun_light_helper = SunLightHelper(self.directional_light, size=9)
-        self.sun_light_helper.set_position([0, 0, 11])
+        self.sun_light_helper.set_position([70, 80, 30])
 
         #self.directional_light.set_position([30, 30, 30])
         #self.directional_light.set_direction([10, -1, -90])
-        #self.directional_light.set_position([70, 80, -95])
-        #self.directional_light.set_direction([0, -50, -90])
+        self.directional_light.set_position([70, 80, 30])
+        self.directional_light.set_direction([-20, -50, -90])
 
         # self.directional_light.add(directional_light_helper)
         self.directional_light.add(self.sun_light_helper)
