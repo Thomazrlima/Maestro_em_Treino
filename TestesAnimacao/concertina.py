@@ -54,7 +54,7 @@ class ConcertinaAnimation(Base):
         fole_texture = Texture(file_name="images/branco.jpg")
         fole_material = TextureMaterial(texture=fole_texture)
         self.fole = Mesh(fole_geometry, fole_material)
-        self.fole.set_position([0, 0, 0])
+        self.fole.set_position([x, y, z])
 
         esq_v, esq_uv = my_obj_reader('instrumentos/sanfonadir.obj')
         esq_v = np.array(esq_v, dtype=np.float32)
@@ -79,17 +79,11 @@ class ConcertinaAnimation(Base):
                                               esq_uv[7802:17280].tolist()), branco1)
         self.sanfonabra.rotate_x(angulo)
 
-
-        #self.sanfonaesq.set_position([0, 0, 0])
-        #self.sanfonaver.set_position([0, 0, 0])
-        #self.sanfonabra.set_position([0, 0, 0])
-
         dir_v, dir_uv = my_obj_reader('instrumentos/sanfonaesq.obj')
         dir_v = np.array(dir_v, dtype=np.float32)
         dir_uv = np.array(dir_uv, dtype=np.float32)
 
         preto = TextureMaterial(Texture("images/preto.jpg"))
-        #print(f"Número total de vértices em 'esq': {len(esq_v) // 3}")
 
         self.sanfonadir = Mesh(customGeometry(1, 1, 1,
                                               dir_v[0:3623].tolist(),
@@ -106,9 +100,26 @@ class ConcertinaAnimation(Base):
                                                    dir_uv[4401:9164].tolist()), branco1)
         self.sanfonadirpreto.rotate_x(angulo)
 
-        #self.sanfonadir.set_position([0, 0, 0])
-        #self.sanfonadirbra.set_position([0, 0, 0])
-       #self.sanfonadirpreto.set_position([0, 0, 0])
+        offset_esquerdo = -2.5 
+        offset_direito = 2.5
+
+        self.sanfonaesq.rotate_x(angulo)
+        self.sanfonaesq.set_position([x + offset_esquerdo, y, z])
+        
+        self.sanfonaver.rotate_x(angulo)
+        self.sanfonaver.set_position([x + offset_esquerdo, y, z])
+        
+        self.sanfonabra.rotate_x(angulo)
+        self.sanfonabra.set_position([x + offset_esquerdo, y, z])
+
+        self.sanfonadir.rotate_x(angulo)
+        self.sanfonadir.set_position([x + offset_direito, y, z])
+        
+        self.sanfonadirbra.rotate_x(angulo)
+        self.sanfonadirbra.set_position([x + offset_direito, y, z])
+        
+        self.sanfonadirpreto.rotate_x(angulo)
+        self.sanfonadirpreto.set_position([x + offset_direito, y, z])
 
         self.rig = MovementRig()
         self.rig.rotate_y(math.pi / 2)
@@ -119,23 +130,9 @@ class ConcertinaAnimation(Base):
         self.rig.add(self.sanfonadir)
         self.rig.add(self.sanfonadirbra)
         self.rig.add(self.sanfonadirpreto)
-        #self.rig.set_position([0, 0, 0])
         self.scene.add(self.rig)
 
         self.rig.disable_movement()
-
-        self.sanfonadirpreto.set_position([x, y, z])
-        self.sanfonadirbra.set_position([x, y, z])
-        self.sanfonadir.set_position([x, y, z])
-        self.sanfonabra.set_position([x, y, z])
-        self.sanfonaesq.set_position([x, y, z])
-        self.sanfonaver.set_position([x, y, z])
-        self.fole.set_position([x, y, z])
-
-        # self.scene.add(AxesHelper(axis_length=2))
-        # grid = GridHelper(size=20, grid_color=[1, 1, 1], center_color=[1, 1, 0])
-        # grid.rotate_x(-math.pi / 2)
-        # self.scene.add(grid)
 
         self.animation_active = False
         self.animation_duration = 2.0
@@ -680,12 +677,18 @@ class ConcertinaAnimation(Base):
             half_width = 0.0
 
         self.fole.set_scale([scale_x, 1, 1])
-        self.sanfonaesq.set_position([-half_width / 2, 0, 0])
-        self.sanfonaver.set_position([-half_width / 2, 0, 0])
-        self.sanfonabra.set_position([-half_width / 2, 0, 0])
-        self.sanfonadir.set_position([half_width / 2, 0, 0])
-        self.sanfonadirbra.set_position([half_width / 2, 0, 0])
-        self.sanfonadirpreto.set_position([half_width / 2, 0, 0])
+        
+        offset_esq = -half_width
+        offset_dir = half_width
+        y = 5.5
+        z = 25
+        
+        self.sanfonaesq.set_position([offset_esq/2, y, z])
+        self.sanfonaver.set_position([offset_esq/2, y, z])
+        self.sanfonabra.set_position([offset_esq/2, y, z])
+        self.sanfonadir.set_position([offset_dir/2, y, z])
+        self.sanfonadirbra.set_position([offset_dir/2, y, z])
+        self.sanfonadirpreto.set_position([offset_dir/2, y, z])
 
         self.renderer.render(self.scene, self.camera)
 
