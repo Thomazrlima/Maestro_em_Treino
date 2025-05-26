@@ -139,6 +139,42 @@ class ConcertinaAnimation(Base):
         self.animation_elapsed = 0.0
         self.max_scale = 2.8
 
+        self.audio = Audio()
+        self.audio.load(
+           name='blowQ',
+           filepath='used_sounds/Concertina/333711__hammondman__c3.wav'
+        )
+        self.audio.load(
+           name='blowW',
+           filepath='used_sounds/Concertina/333712__hammondman__adz3.wav'
+        )
+        self.audio.load(
+           name='blowE',
+           filepath='used_sounds/Concertina/333713__hammondman__a4.wav'
+        )
+        self.audio.load(
+           name='blowR',
+           filepath='used_sounds/Concertina/333714__hammondman__a2.wav'
+        )
+        self.audio.load(
+           name='blowT',
+           filepath='used_sounds/Concertina/333715__hammondman__d4.wav'
+        )
+        self.audio.load(
+           name='blowY',
+           filepath='used_sounds/Concertina/333716__hammondman__cdz3.wav'
+        )
+        self.audio.load(
+           name='blowU',
+           filepath='used_sounds/Concertina/333717__hammondman__c5.wav'
+        )
+        self.audio.load(
+           name='blowI',
+           filepath='used_sounds/Concertina/333718__hammondman__c4.wav'
+        )
+        self.audio.set_master_volume(0.05)
+        self.keys = ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i']
+
     def init_map(self):
         n = 0.5
         ambient_light = AmbientLight(color=[0.1 * n, 0.1 * n, 0.1 * n])
@@ -651,30 +687,79 @@ class ConcertinaAnimation(Base):
         self.directional_light.set_direction([10, -1, -90])
     def update(self):
         self.rig.update(self.input, self.delta_time)
+        for key in self.keys:
+            if self.input.is_key_pressed(key) and not self.animation_active:
+                self.animation_active = True
+                self.animation_elapsed = 0.0
+                if self.input.is_key_down('q'):
+                    print("Key 'q' pressed")
+                    self.audio.play('blowQ')
+                if self.input.is_key_down('w'):
+                    print("Key 'w' pressed")
+                    self.audio.play('blowW')
+                if self.input.is_key_down('e'):
+                    print("Key 'e' pressed")
+                    self.audio.play('blowE')
+                if self.input.is_key_down('r'):
+                    print("Key 'r' pressed")
+                    self.audio.play('blowR')
+                if self.input.is_key_down('t'):
+                    print("Key 't' pressed")
+                    self.audio.play('blowT')
+                if self.input.is_key_down('y'):
+                    print("Key 'y' pressed")
+                    self.audio.play('blowY')
+                if self.input.is_key_down('u'):
+                    print("Key 'u' pressed")
+                    self.audio.play('blowU')
+                if self.input.is_key_down('i'):
+                    print("Key 'i' pressed")
+                    self.audio.play('blowI')
 
-        if not self.animation_active and self.input.is_key_pressed('m'):
-            self.animation_active = True
-            self.animation_elapsed = 0.0
+            if self.animation_active:
+                self.animation_elapsed += self.delta_time
+                progress = self.animation_elapsed / self.animation_duration
 
-        if self.animation_active:
-            self.animation_elapsed += self.delta_time
-            progress = self.animation_elapsed / self.animation_duration
-
-            if progress <= 0.5:
-                scale_x = 1.0 + (self.max_scale - 1.0) * (progress / 0.5)
-                move_factor = (progress / 0.5)
-                half_width = self.base_fole_half_width * move_factor
-            elif progress <= 1.0:
-                scale_x = self.max_scale - (self.max_scale - 1.0) * ((progress - 0.5) / 0.5)
-                move_factor = 1 - ((progress - 0.5) / 0.5)
-                half_width = self.base_fole_half_width * move_factor
+                if progress <= 0.5:
+                    scale_x = 1.0 + (self.max_scale - 1.0) * (progress / 0.5)
+                    move_factor = (progress / 0.5)
+                    half_width = self.base_fole_half_width * move_factor
+                elif progress <= 1.0:
+                    scale_x = self.max_scale - (self.max_scale - 1.0) * ((progress - 0.5) / 0.5)
+                    move_factor = 1 - ((progress - 0.5) / 0.5)
+                    half_width = self.base_fole_half_width * move_factor
+                else:
+                    scale_x = 1.0
+                    half_width = 0.0
+                    self.animation_active = False
+                if self.input.is_key_pressed(key):
+                    if self.input.is_key_down('q'):
+                        print("Key 'q' pressed")
+                        self.audio.play('blowQ')
+                    if self.input.is_key_down('w'):
+                        print("Key 'w' pressed")
+                        self.audio.play('blowW')
+                    if self.input.is_key_down('e'):
+                        print("Key 'e' pressed")
+                        self.audio.play('blowE')
+                    if self.input.is_key_down('r'):
+                        print("Key 'r' pressed")
+                        self.audio.play('blowR')
+                    if self.input.is_key_down('t'):
+                        print("Key 't' pressed")
+                        self.audio.play('blowT')
+                    if self.input.is_key_down('y'):
+                        print("Key 'y' pressed")
+                        self.audio.play('blowY')
+                    if self.input.is_key_down('u'):
+                        print("Key 'u' pressed")
+                        self.audio.play('blowU')
+                    if self.input.is_key_down('i'):
+                        print("Key 'i' pressed")
+                        self.audio.play('blowI')
             else:
                 scale_x = 1.0
                 half_width = 0.0
-                self.animation_active = False
-        else:
-            scale_x = 1.0
-            half_width = 0.0
 
         self.fole.set_scale([scale_x, 1, 1])
         

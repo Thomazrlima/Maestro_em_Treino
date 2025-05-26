@@ -66,6 +66,30 @@ class TriangleAnimation(Base):
         self.hit_time = 0
         self.drumstick_progress = 0
 
+        self.audio = Audio()
+        self.audio.load(
+           name='blowQ',
+           filepath='used_sounds/Triangulo/250349__tartina__tri_f_2.wav'
+        )
+        self.audio.load(
+           name='blowW',
+           filepath='used_sounds/Triangulo/250350__tartina__tri_f_1.wav'
+        )
+        self.audio.load(
+           name='blowE',
+           filepath='used_sounds/Triangulo/250351__tartina__tri_p_2.wav'
+        )
+        self.audio.load(
+           name='blowR',
+           filepath='used_sounds/Triangulo/250352__tartina__tri_p_1.wav'
+        )
+        self.audio.load(
+           name='blowT',
+           filepath='used_sounds/Triangulo/250353__tartina__tri_stp_1.wav'
+        )
+        self.audio.set_master_volume(0.5)
+        self.keys = ['q', 'w', 'e', 'r', 't']
+
     def load_objects(self):
         self.x = -2
         self.y = 7
@@ -721,12 +745,28 @@ class TriangleAnimation(Base):
     def update(self):
         self.rig.update(self.input, self.delta_time)
 
-        if self.input.is_key_pressed('h'):
-            self.hit_triangle()
+        for key in self.keys:
+            if self.input.is_key_pressed(key):
+                self.hit_triangle()
+                if self.input.is_key_down('q'):
+                    print("Key 'q' pressed")
+                    self.audio.play('blowQ')
+                if self.input.is_key_down('w'):
+                    print("Key 'w' pressed")
+                    self.audio.play('blowW')
+                if self.input.is_key_down('e'):
+                    print("Key 'e' pressed")
+                    self.audio.play('blowE')
+                if self.input.is_key_down('r'):
+                    print("Key 'r' pressed")
+                    self.audio.play('blowR')
+                if self.input.is_key_down('t'):
+                    print("Key 't' pressed")
+                    self.audio.play('blowT')
 
-        if self.drumstick_state != "ready":
-            self.update_drumstick()
-            self.update_swing()
+            if self.drumstick_state != "ready":
+                self.update_drumstick()
+                self.update_swing()
 
         self.renderer.render(self.scene, self.camera)
 
