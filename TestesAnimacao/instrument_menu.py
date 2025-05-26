@@ -9,7 +9,7 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
-BUTTON_COLOR = (200, 0, 0)
+BUTTON_COLOR = (255, 0, 0)
 HOVER_COLOR = (255, 50, 50)
 BORDER_COLOR = (150, 0, 0)
 TEXT_COLOR = (255, 255, 255)
@@ -61,10 +61,10 @@ class Button:
         shadow_rect.move_ip(4, 4)
         pygame.draw.rect(surface, GRAY, shadow_rect, border_radius=10)
 
-        color = HOVER_BLUE if self.is_hovered else BLUE
+        color = RED_HOVER if self.is_hovered else BUTTON_COLOR
         pygame.draw.rect(surface, color, self.rect, border_radius=10)
 
-        pygame.draw.rect(surface, DARK_BLUE, self.rect, 2, border_radius=10)
+        pygame.draw.rect(surface, DARK_RED_BORDER, self.rect, 2, border_radius=10)
 
         text_surf = font_medium.render(self.text, True, WHITE)
         text_rect = text_surf.get_rect(center=self.rect.center)
