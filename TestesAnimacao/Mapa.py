@@ -22,6 +22,7 @@ from material.texture import TextureMaterial
 from extras.movement_rig import MovementRig
 from light.ambient import AmbientLight
 import random
+from core_ext.audio import Audio
 
 from menu import SCREEN_HEIGHT, SCREEN_WIDTH
 import subprocess
@@ -64,6 +65,13 @@ class Example(Base):
 
         self.renderer.enable_shadows(self.directional_light)
 
+        self.audio = Audio()
+        self.audio.load(
+           name='masterpiece',
+           filepath='used_sounds/obradearte.mp3'
+        )
+        self.audio.set_master_volume(3)
+        self.audio.play(name='masterpiece')
         #--------------------------------------------------------------CEU-------------------------------------------------------------
 
         sky_geometry = SphereGeometry(radius=250)
@@ -574,7 +582,6 @@ class Example(Base):
             subprocess.run([sys.executable, "menu.py"])
         self.rig.update(self.input, self.delta_time)
         self.renderer.render(self.scene, self.camera)
-
 
 if __name__ == "__main__":
     Example(screen_size=[SCREEN_WIDTH, SCREEN_HEIGHT]).run()
