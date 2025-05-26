@@ -27,6 +27,7 @@ from core_ext.texture import Texture
 from geometry.custom import CustomGeometry
 from core.obj_reader_harmonica import my_obj_reader
 
+from menu import SCREEN_HEIGHT, SCREEN_WIDTH
 class TriangleAnimation(Base):
     def initialize(self):
         print("Initializing triangle animation...")
@@ -770,4 +771,4 @@ class TriangleAnimation(Base):
 
         self.renderer.render(self.scene, self.camera)
 
-TriangleAnimation(screen_size=[800, 600]).run()
+TriangleAnimation(screen_size=[SCREEN_WIDTH, SCREEN_HEIGHT]).run()

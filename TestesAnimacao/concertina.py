@@ -27,6 +27,7 @@ from core_ext.audio import Audio
 from core_ext.texture import Texture
 from geometry.custom import CustomGeometry
 
+from menu import SCREEN_HEIGHT, SCREEN_WIDTH
 class ConcertinaAnimation(Base):
     def initialize(self):
         print("Initializing concertina animation...")
@@ -777,4 +778,4 @@ class ConcertinaAnimation(Base):
 
         self.renderer.render(self.scene, self.camera)
 
-ConcertinaAnimation(screen_size=[800, 600]).run()
+ConcertinaAnimation(screen_size=[SCREEN_WIDTH, SCREEN_HEIGHT]).run()

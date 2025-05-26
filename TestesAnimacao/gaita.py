@@ -26,6 +26,7 @@ from core_ext.audio import Audio
 from core_ext.texture import Texture
 from geometry.custom import CustomGeometry
 from core.obj_reader_harmonica import my_obj_reader 
+from menu import SCREEN_HEIGHT, SCREEN_WIDTH
 class Example(Base):
     def initialize(self):
         print("Initializing program...")
@@ -756,4 +757,4 @@ class Example(Base):
         self.update_animation(self.delta_time)
         self.renderer.render(self.scene, self.camera)
 
-Example(screen_size=[800, 600]).run()
+Example(screen_size=[SCREEN_WIDTH, SCREEN_HEIGHT]).run()

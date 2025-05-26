@@ -23,7 +23,7 @@ from extras.movement_rig import MovementRig
 from light.ambient import AmbientLight
 import random
 
-
+from menu import SCREEN_HEIGHT, SCREEN_WIDTH
 
 class Example(Base):
     """
@@ -570,4 +570,4 @@ class Example(Base):
 
 
 if __name__ == "__main__":
-    Example(screen_size=[1700, 1300]).run()
+    Example(screen_size=[SCREEN_WIDTH, SCREEN_HEIGHT]).run()
