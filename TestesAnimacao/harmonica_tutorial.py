@@ -23,6 +23,9 @@ from core_ext.audio import Audio
 from core_ext.texture import Texture
 from menu import SCREEN_HEIGHT, SCREEN_WIDTH
 
+import subprocess
+import pygame
+import sys
 class Example(Base):
     def initialize(self):
         print("Initializing program...")
@@ -216,7 +219,7 @@ class Example(Base):
             filepath='used_sounds/FitHarmonica/DoMaior.mp3'
         )
 
-        self.audio.set_master_volume(0.05)
+        self.audio.set_master_volume(1)
 
         self._label4_active = False
         self._label4_start_time = 0.0
@@ -278,10 +281,10 @@ class Example(Base):
         self.rig.set_position(new_position)
 
     def update_label(self):
-        self.label_texture_2 = TextTexture(text=" Good job!",
+        self.label_texture_2 = TextTexture(text=" Tutorial Done! Now press 'Enter' to return to the menu",
                                            system_font_name="Comicsans MS",
-                                           font_size=33, font_color=[200, 0, 200],
-                                           image_width=600, image_height=128,
+                                           font_size=30, font_color=[200, 0, 200],
+                                           image_width=820, image_height=128,
                                            align_horizontal=0.5, align_vertical=0.5,
                                            image_border_width=4,
                                            image_border_color=[255, 0, 0])
@@ -356,6 +359,12 @@ class Example(Base):
     def update(self):
         if self.label:
             self.label.look_at(self.camera.global_position)
+        
+        if self.input.is_key_down('return'):
+            print("Enter pressionado - voltando para o menu")
+
+            pygame.quit()
+            subprocess.run([sys.executable, "menu.py"])
         for key in self.animations:
             if self.input.is_key_pressed(key) and not self.animation_active:
                 if self.input.is_key_pressed('q'):
@@ -382,6 +391,8 @@ class Example(Base):
                 if self.input.is_key_down('i'):
                     self.start_animation('i')
                     self.audio.play('blowI')
+                    self.scene.remove(self.label)
+                    self.update_label()
             if self.downtime is not None:
                 elapsed_down = self.time - self.past_time
                 if elapsed_down > 3.0:

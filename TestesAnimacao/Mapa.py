@@ -24,7 +24,9 @@ from light.ambient import AmbientLight
 import random
 
 from menu import SCREEN_HEIGHT, SCREEN_WIDTH
-
+import subprocess
+import pygame
+import sys
 class Example(Base):
     """
     Render a textured skysphere and a textured grass floor.
@@ -565,6 +567,11 @@ class Example(Base):
 
 
     def update(self):
+        if self.input.is_key_down('return') and not self.animation_active:
+            print("Enter pressionado - voltando para o menu")
+
+            pygame.quit()
+            subprocess.run([sys.executable, "menu.py"])
         self.rig.update(self.input, self.delta_time)
         self.renderer.render(self.scene, self.camera)
 

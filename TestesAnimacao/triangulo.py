@@ -27,6 +27,12 @@ from core_ext.texture import Texture
 from geometry.custom import CustomGeometry
 from core.obj_reader_harmonica import my_obj_reader
 
+import subprocess
+import pygame
+import sys
+
+from score.score import Score, euclidean_rhythm, check_rhythm
+
 from menu import SCREEN_HEIGHT, SCREEN_WIDTH
 class TriangleAnimation(Base):
     def initialize(self):
@@ -90,6 +96,49 @@ class TriangleAnimation(Base):
         )
         self.audio.set_master_volume(0.5)
         self.keys = ['q', 'w', 'e', 'r', 't']
+        self.score = Score()
+        self.euclideano = euclidean_rhythm(4, 8)
+        self.sequence_started = False
+        self.sequence_start_time = 0.0
+        self.sequence_last_checked_slot = 0
+        self.keys_in_slot = False
+        self.input_sequence = []
+
+        self.label_texture = TextTexture(text=f" Score: {self.score.value} ",
+                                         system_font_name="Comicsans MS",
+                                         font_size=35, font_color=[255, 180, 0],
+                                         image_width=600, image_height=128,
+                                         align_horizontal=0.5, align_vertical=0.5,
+                                         transparent=True)
+
+        self.label_material = TextureMaterial(self.label_texture)
+        self.label_geometry = RectangleGeometry(width=2, height=0.5)
+        self.label_geometry.apply_matrix(Matrix.make_rotation_y(np.pi/2))  # Rotate to face -z
+        self.label = Mesh(self.label_geometry, self.label_material)
+        self.label.set_position([23.5, 7.8, -1.9])
+        self.scene.add(self.label)
+
+    def checkScore(self, input_sequence):
+        if check_rhythm(input_sequence, self.euclideano):
+            self.score.increment()
+            self.scene.remove(self.label)
+
+            self.label_texture = TextTexture(text=f" Score: {self.score.value} ",
+                                         system_font_name="Comicsans MS",
+                                         font_size=35, font_color=[255, 180, 0],
+                                         image_width=600, image_height=128,
+                                         align_horizontal=0.5, align_vertical=0.5,
+                                         transparent=True)
+            self.label_material = TextureMaterial(self.label_texture)
+            self.label = Mesh(self.label_geometry, self.label_material)
+            self.label.set_position([23.5, 7.8, -1.9])
+            self.scene.add(self.label)
+            
+        self.sequence_started = False
+        self.sequence_last_checked_slot = 0
+        self.keys_in_slot = False
+        self.input_sequence = []
+
 
     def load_objects(self):
         self.x = -2
@@ -781,8 +830,23 @@ class TriangleAnimation(Base):
     def update(self):
         self.rig.update(self.input, self.delta_time)
 
+        if self.input.is_key_down('return'):
+            print("Enter pressionado - voltando para o menu")
+
+            pygame.quit()
+            subprocess.run([sys.executable, "menu.py"])
+
         for key in self.keys:
             if self.input.is_key_pressed(key):
+                if not self.sequence_started:
+                    self.sequence_started = True
+                    self.sequence_start_time = self.time
+                    self.sequence_last_checked_slot = 0
+                    self.keys_in_slot = True
+                    self.input_sequence = []
+                    print("Sequência de ritmo iniciada")
+                elif self.sequence_started and self.sequence_last_checked_slot <= 8:
+                    self.keys_in_slot = True
                 self.hit_triangle()
                 if self.input.is_key_down('q'):
                     print("Key 'q' pressed")
@@ -803,6 +867,18 @@ class TriangleAnimation(Base):
             if self.drumstick_state != "ready":
                 self.update_drumstick()
                 self.update_swing()
+        
+        if self.sequence_started:
+            elapsed = self.time - self.sequence_start_time
+            current_slot = int(elapsed)
+            if current_slot > self.sequence_last_checked_slot and current_slot <= 8:
+                slot_val = 1 if self.keys_in_slot else 0
+                self.input_sequence.append(slot_val)
+                print(f"Slot {self.sequence_last_checked_slot + 1} → {slot_val}")
+                self.keys_in_slot = False
+                self.sequence_last_checked_slot = current_slot
+                if current_slot == 8:
+                    self.checkScore(self.input_sequence)
 
         self.renderer.render(self.scene, self.camera)
 
