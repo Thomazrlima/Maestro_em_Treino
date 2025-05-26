@@ -107,6 +107,42 @@ class Example(Base):
             'm': {'type': 'inflate'}
         }
 
+        self.audio = Audio()
+        self.audio.load(
+           name='blowQ',
+           filepath='used_sounds/Gaita/A#4_31.wav'
+        )
+        self.audio.load(
+           name='blowW',
+           filepath='used_sounds/Gaita/A4_31.wav'
+        )
+        self.audio.load(
+           name='blowE',
+           filepath='used_sounds/Gaita/B4_31.wav'
+        )
+        self.audio.load(
+           name='blowR',
+           filepath='used_sounds/Gaita/C#5_31.wav'
+        )
+        self.audio.load(
+           name='blowT',
+           filepath='used_sounds/Gaita/C5_32.wav'
+        )
+        self.audio.load(
+           name='blowY',
+           filepath='used_sounds/Gaita/E5_32.wav'
+        )
+        self.audio.load(
+           name='blowU',
+           filepath='used_sounds/Gaita/F#5_31.wav'
+        )
+        self.audio.load(
+           name='blowI',
+           filepath='used_sounds/Gaita/G4_31.wav'
+        )
+        self.audio.set_master_volume(0.05)
+        self.keys = ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i']
+
     def init_map(self):
         n = 0.5
         ambient_light = AmbientLight(color=[0.1 * n, 0.1 * n, 0.1 * n])
@@ -658,8 +694,59 @@ class Example(Base):
     def update(self):
         self.rig.update(self.input, self.delta_time)
 
-        if self.input.is_key_pressed('m') and not self.animation_active:
-            self.start_animation('m')
+        for key in self.keys:
+            if self.input.is_key_pressed(key) and not self.animation_active:
+                self.start_animation('m')
+                if self.input.is_key_down('q'):
+                    print("Key 'q' pressed")
+                    self.audio.play('blowQ')
+                if self.input.is_key_down('w'):
+                    print("Key 'w' pressed")
+                    self.audio.play('blowW')
+                if self.input.is_key_down('e'):
+                    print("Key 'e' pressed")
+                    self.audio.play('blowE')
+                if self.input.is_key_down('r'):
+                    print("Key 'r' pressed")
+                    self.audio.play('blowR')
+                if self.input.is_key_down('t'):
+                    print("Key 't' pressed")
+                    self.audio.play('blowT')
+                if self.input.is_key_down('y'):
+                    print("Key 'y' pressed")
+                    self.audio.play('blowY')
+                if self.input.is_key_down('u'):
+                    print("Key 'u' pressed")
+                    self.audio.play('blowU')
+                if self.input.is_key_down('i'):
+                    print("Key 'i' pressed")
+                    self.audio.play('blowI')
+
+            elif self.input.is_key_pressed(key) and self.animation_active:
+                if self.input.is_key_down('q'):
+                    print("Key 'q' pressed")
+                    self.audio.play('blowQ')
+                if self.input.is_key_down('w'):
+                    print("Key 'w' pressed")
+                    self.audio.play('blowW')
+                if self.input.is_key_down('e'):
+                    print("Key 'e' pressed")
+                    self.audio.play('blowE')
+                if self.input.is_key_down('r'):
+                    print("Key 'r' pressed")
+                    self.audio.play('blowR')
+                if self.input.is_key_down('t'):
+                    print("Key 't' pressed")
+                    self.audio.play('blowT')
+                if self.input.is_key_down('y'):
+                    print("Key 'y' pressed")
+                    self.audio.play('blowY')
+                if self.input.is_key_down('u'):
+                    print("Key 'u' pressed")
+                    self.audio.play('blowU')
+                if self.input.is_key_down('i'):
+                    print("Key 'i' pressed")
+                    self.audio.play('blowI')
 
         self.update_animation(self.delta_time)
         self.renderer.render(self.scene, self.camera)
