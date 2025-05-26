@@ -8,16 +8,34 @@ pygame.init()
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Maestro em Treino")
 
+BUTTON_COLOR = (200, 0, 0)
+HOVER_COLOR = (255, 50, 50)
+BORDER_COLOR = (150, 0, 0)
+TEXT_COLOR = (255, 255, 255)
+SHADOW_COLOR = (100, 0, 0)
+DARK_BLUE = (20, 40, 100)
 WHITE = (255, 255, 255)
 BLACK = (20, 20, 20)
 GRAY = (240, 240, 240)
 BLUE = (50, 100, 255)
+RED_DARK = (139, 0, 0)
+RED_HOVER = (180, 30, 30)
+DARK_RED_BORDER = (100, 0, 0)
 HOVER_BLUE = (30, 80, 220)
-DARK_BLUE = (20, 40, 100)
-SHADOW = (0, 0, 0, 100)
 
+IMAGE_DIR = "images"
+IMAGE_PATHS = {
+    "Mapa": os.path.join(IMAGE_DIR, "mapa.png"),
+    "Harmónica": os.path.join(IMAGE_DIR, "harmonica.png"),
+    "Gaita": os.path.join(IMAGE_DIR, "gaita.png"),
+    "Concertina": os.path.join(IMAGE_DIR, "sanfona.png"),
+    "Triângulo": os.path.join(IMAGE_DIR, "triangulo.png")
+}
+CURTAIN_IMAGE_PATH = os.path.join(IMAGE_DIR, "cortina.jpeg")
+
+font_title = pygame.font.SysFont('Georgia', 50, bold=True)
+font_button = pygame.font.SysFont('Verdana', 28)
 font_large = pygame.font.SysFont('Georgia', 60, bold=True)
 font_medium = pygame.font.SysFont('Verdana', 28)
 font_small = pygame.font.SysFont('Verdana', 22)
@@ -70,6 +88,15 @@ class Button:
                     sys.exit()
             except Exception as e:
                 print(f"Erro ao executar o script: {e}")
+    
+def load_images():
+    images = {}
+    for name, path in IMAGE_PATHS.items():
+        if os.path.exists(path):
+            img = pygame.image.load(path).convert_alpha()
+            img = pygame.transform.scale(img, (50, 50))
+            images[name] = img
+    return images
 
 def instrument_menu():
     buttons = [
@@ -80,7 +107,13 @@ def instrument_menu():
         Button(SCREEN_WIDTH // 2 - 150, 500, 300, 60, "Triângulo", "triangulo.py")
     ]
 
-    # Set window title
+    images = load_images()
+
+    curtain_image = None
+    if os.path.exists(CURTAIN_IMAGE_PATH):
+        curtain_image = pygame.image.load(CURTAIN_IMAGE_PATH)
+        curtain_image = pygame.transform.scale(curtain_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
+    
     font_large = pygame.font.SysFont(None, 75)
     pygame.display.set_caption("Selecione o seu instrumento")
     running = True
@@ -98,15 +131,31 @@ def instrument_menu():
                         button.execute_action()
                         if button.action != "exit":
                             running = False
-        # Draw background and title
-        draw_gradient_background()
-        title_surf = font_large.render("Selecione o seu instrumento", True, DARK_BLUE)
-        screen.blit(title_surf, (SCREEN_WIDTH // 2 - title_surf.get_width() // 2, 80))
+        if curtain_image:
+            screen.blit(curtain_image, (0, 0))
+        else:
+            draw_gradient_background()
+
+        # AGORA desenha o título por cima
+        title_surf = font_title.render("Selecione o seu instrumento", True, TEXT_COLOR)
+        screen.blit(title_surf,  (SCREEN_WIDTH // 2 - title_surf.get_width() // 2, 80))
 
         # Draw instrument buttons
         for button in buttons:
             button.check_hover(mouse_pos)
             button.draw(screen)
+            img = images.get(button.text)
+            if img:
+                img_y = button.rect.y + (button.rect.height - img.get_height()) // 2
+                img_x = button.rect.x - img.get_width() - 10
+
+                shadow_offset = 3
+                shadow_pos = (img_x + shadow_offset, img_y + shadow_offset)
+                shadow_surf = img.copy()
+                shadow_surf.fill((0, 0, 0, 100), special_flags=pygame.BLEND_RGBA_MULT)
+                screen.blit(shadow_surf, shadow_pos)
+
+                screen.blit(img, (img_x, img_y))
 
         pygame.display.flip()
 
