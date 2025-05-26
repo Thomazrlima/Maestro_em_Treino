@@ -27,6 +27,9 @@ from core_ext.audio import Audio
 from core_ext.texture import Texture
 from geometry.custom import CustomGeometry
 from score.score import Score
+import subprocess
+import pygame
+import sys
 
 from menu import SCREEN_HEIGHT, SCREEN_WIDTH
 class ConcertinaAnimation(Base):
@@ -689,8 +692,16 @@ class ConcertinaAnimation(Base):
 
         self.directional_light.set_position([30, 30, 30])
         self.directional_light.set_direction([10, -1, -90])
+
     def update(self):
         self.rig.update(self.input, self.delta_time)
+
+        if self.input.is_key_down('z') and self.input.is_key_down('x') and not self.animation_active:
+            print("Z + X pressionados - voltando para o menu")
+
+            pygame.quit()
+            subprocess.run([sys.executable, "menu.py"])
+
         for key in self.keys:
             if self.input.is_key_pressed(key) and not self.animation_active:
                 self.animation_active = True
