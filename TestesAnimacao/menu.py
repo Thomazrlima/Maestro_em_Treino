@@ -13,23 +13,20 @@ pygame.display.set_caption("Maestro em Treino")
 WHITE = (255, 255, 255)
 BLACK = (20, 20, 20)
 GRAY = (240, 240, 240)
-BLUE = (50, 100, 255)
-HOVER_BLUE = (30, 80, 220)
-DARK_BLUE = (20, 40, 100)
-SHADOW = (0, 0, 0, 100)
+RED_DARK = (139, 0, 0)
+RED_HOVER = (180, 30, 30)
+DARK_RED_BORDER = (100, 0, 0)
 
 font_large = pygame.font.SysFont('Georgia', 60, bold=True)
 font_medium = pygame.font.SysFont('Verdana', 28)
 font_small = pygame.font.SysFont('Verdana', 22)
 
-def draw_gradient_background():
-    for y in range(SCREEN_HEIGHT):
-        color = (
-            255 - y // 3,
-            255 - y // 5,
-            255
-        )
-        pygame.draw.line(screen, color, (0, y), (SCREEN_WIDTH, y))
+IMAGE_DIR = "images"
+PALCO_IMAGE_PATH = os.path.join(IMAGE_DIR, "palco.jpg")
+palco_image = None
+if os.path.exists(PALCO_IMAGE_PATH):
+    palco_image = pygame.image.load(PALCO_IMAGE_PATH)
+    palco_image = pygame.transform.scale(palco_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
 class Button:
     def __init__(self, x, y, width, height, text, action=None):
@@ -43,10 +40,10 @@ class Button:
         shadow_rect.move_ip(4, 4)
         pygame.draw.rect(surface, GRAY, shadow_rect, border_radius=10)
 
-        color = HOVER_BLUE if self.is_hovered else BLUE
+        color = RED_HOVER if self.is_hovered else RED_DARK
         pygame.draw.rect(surface, color, self.rect, border_radius=10)
 
-        pygame.draw.rect(surface, DARK_BLUE, self.rect, 2, border_radius=10)
+        pygame.draw.rect(surface, DARK_RED_BORDER, self.rect, 2, border_radius=10)
 
         text_surf = font_medium.render(self.text, True, WHITE)
         text_rect = text_surf.get_rect(center=self.rect.center)
@@ -59,17 +56,12 @@ class Button:
         if self.action:
             print(f"Executando: {self.action}")
             try:
-                if self.action.endswith(".py"):
-                    pygame.quit()
-                    subprocess.run([sys.executable, self.action])
-                    pygame.init()
-                    global screen
-                    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-                elif self.action == "exit":
-                    pygame.quit()
-                    sys.exit()
+                pygame.quit()
+                subprocess.run(["python", self.action])
+                os.execv(sys.executable, ['python'] + sys.argv)
             except Exception as e:
                 print(f"Erro ao executar o script: {e}")
+                pygame.init()
 
 def main_menu():
     buttons = [
@@ -89,17 +81,23 @@ def main_menu():
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 for button in buttons:
                     if button.rect.collidepoint(event.pos):
-                        button.execute_action()
-                        if button.action != "exit":
+                        if button.action == "exit":
                             running = False
-
-        draw_gradient_background()
-
-        title = font_large.render("Maestro em Treino", True, DARK_BLUE)
-        screen.blit(title, (SCREEN_WIDTH // 2 - title.get_width() // 2, 80))
+                        else:
+                            button.execute_action()
 
         for button in buttons:
             button.check_hover(mouse_pos)
+
+        if palco_image:
+            screen.blit(palco_image, (0, 0))
+        else:
+            screen.fill(WHITE)
+        
+        title = font_large.render("Maestro em Treino", True, WHITE)
+        screen.blit(title, (SCREEN_WIDTH // 2 - title.get_width() // 2, 80))
+
+        for button in buttons:
             button.draw(screen)
 
         pygame.display.flip()
@@ -108,5 +106,4 @@ def main_menu():
     sys.exit()
 
 if __name__ == "__main__":
-    while True:
-        main_menu()
+    main_menu()
