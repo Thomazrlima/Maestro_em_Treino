@@ -54,56 +54,49 @@ class Button:
     def check_hover(self, pos):
         self.is_hovered = self.rect.collidepoint(pos)
 
-    def execute_action(self):
-        if self.action:
-            print(f"Executando: {self.action}")
-            try:
-                if self.action.endswith(".py"):
-                    pygame.quit()
-                    subprocess.run([sys.executable, self.action])
-                    pygame.init()
-                    global screen
-                    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-                elif self.action == "exit":
-                    pygame.quit()
-                    sys.exit()
-            except Exception as e:
-                print(f"Erro ao executar o script: {e}")
-
 def main_menu():
     audio = Audio()
-    audio.load(
-        name='elevator',
-        filepath='used_sounds/elevador.mp3'
-    )
+    audio.load(name='elevator', filepath='used_sounds/elevador.mp3')
     audio.set_master_volume(3)
     audio.play(name='elevator')
+
     buttons = [
         Button(SCREEN_WIDTH // 2 - 150, 240, 300, 60, "Jogar", "instrument_menu.py"),
         Button(SCREEN_WIDTH // 2 - 150, 320, 300, 60, "Tutorial", "harmonica_tutorial.py"),
         Button(SCREEN_WIDTH // 2 - 150, 400, 300, 60, "Sair", "exit")
     ]
 
+    return buttons
+
+def run_menu():
+    buttons = main_menu()
     running = True
+
     while running:
         mouse_pos = pygame.mouse.get_pos()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+                break
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 for button in buttons:
                     if button.rect.collidepoint(event.pos):
-                        button.execute_action()
-                        if button.action != "exit":
+                        action = button.action
+                        if action == "exit":
                             running = False
+                            break
+                        else:
+                            pygame.quit()
+                            subprocess.run([sys.executable, action])
+                            sys.exit()
 
         if palco_image:
             screen.blit(palco_image, (0, 0))
         else:
             screen.fill(WHITE)
-        
+
         title = font_large.render("Maestro em Treino", True, WHITE)
         screen.blit(title, (SCREEN_WIDTH // 2 - title.get_width() // 2, 80))
 
@@ -117,5 +110,4 @@ def main_menu():
     sys.exit()
 
 if __name__ == "__main__":
-    while True:
-        main_menu()
+    run_menu()
