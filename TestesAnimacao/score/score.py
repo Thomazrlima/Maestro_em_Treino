@@ -65,8 +65,10 @@ def check_rhythm(input_sequence, pattern):
 
 
 if __name__ == "__main__":
-    pattern = euclidean_rhythm(4, 8)
+    pattern = euclidean_rhythm(5, 8)
     print("Pattern:", pattern)
-    test_seq = [1, 0, 1, 0, 1, 0, 1, 0]
+    test_seq = [0, 1, 1, 0, 1, 1, 0, 1]
+    # test_seq = [1, 0, 0, 1, 0, 0, 1, 0] # 3,8
+    # test_seq = [1, 0, 1, 0, 1, 0, 1, 0] # 4,8
     print("Match:", check_rhythm(test_seq, pattern))
     print("Final score:", score.value)
