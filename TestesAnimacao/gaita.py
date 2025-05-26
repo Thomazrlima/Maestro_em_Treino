@@ -176,7 +176,7 @@ class Example(Base):
         self.label_geometry = RectangleGeometry(width=2, height=0.5)
         self.label_geometry.apply_matrix(Matrix.make_rotation_y(np.pi/2))  # Rotate to face -z
         self.label = Mesh(self.label_geometry, self.label_material)
-        self.label.set_position([23.5, 7.8, -1.9])
+        self.label.set_position([23.5, 7.8, 1.9])
         self.scene.add(self.label)
 
     def checkScore(self, input_sequence):
@@ -192,7 +192,7 @@ class Example(Base):
                                          transparent=True)
             self.label_material = TextureMaterial(self.label_texture)
             self.label = Mesh(self.label_geometry, self.label_material)
-            self.label.set_position([23.5, 7.8, -1.9])
+            self.label.set_position([23.5, 7.8, 1.9])
             self.scene.add(self.label)
             
         self.sequence_started = False
