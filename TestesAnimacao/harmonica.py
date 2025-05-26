@@ -26,6 +26,7 @@ from material.phong import PhongMaterial
 
 from core_ext.audio import Audio
 from core_ext.texture import Texture
+from menu import SCREEN_HEIGHT, SCREEN_WIDTH
 class Example(Base):
     def initialize(self):
         print("Initializing program...")
@@ -863,4 +864,4 @@ class Example(Base):
         self.renderer.render(self.scene, self.camera)
 
 
-Example(screen_size=[800, 600]).run()
+Example(screen_size=[SCREEN_WIDTH, SCREEN_HEIGHT]).run()
