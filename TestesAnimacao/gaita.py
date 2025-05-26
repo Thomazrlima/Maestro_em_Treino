@@ -45,31 +45,36 @@ class Example(Base):
         z = 0
         angulo = 0
 
-        tecido_vertices = my_obj_reader1('instrumentos/tecido_gaita.obj')
+        tecido_vertices, tecido_uv = my_obj_reader('instrumentos/tecido_gaita.obj')
+        tecido_uv = [[u * 5, v * 5] for u, v in tecido_uv]
         tecido_vertices_array = np.array(tecido_vertices)
         tecido_center = np.mean(tecido_vertices_array, axis=0)
         centered_tecido_vertices = (tecido_vertices_array - tecido_center).tolist()
         
-        tecido_geometry = customGeometry(1, 1, 1, centered_tecido_vertices)
-        tecido_material = SurfaceMaterial(property_dict={"useVertexColors": True, "doubleSide": True})
+        tecido_geometry = CustomGeometry(1, 1, 1, centered_tecido_vertices, tecido_uv)
+        tecido_texture = Texture("images/bag_cloth.jpg")
+        tecido_material = PhongMaterial(texture=tecido_texture, number_of_light_sources=2, use_shadow=True)
         self.tecido_mesh = Mesh(tecido_geometry, tecido_material)
         self.tecido_mesh.rotate_x(angulo)
         self.tecido_mesh.set_position([x, y, z])
 
-        corpo_vertices = my_obj_reader1('instrumentos/corpo_gaita.obj')
+        corpo_vertices, corpo_uv = my_obj_reader('instrumentos/corpo_gaita.obj')
+        corpo_uv = [[u , v * 4] for u, v in corpo_uv]
         corpo_vertices_array = np.array(corpo_vertices)
         centered_corpo_vertices = (corpo_vertices_array - tecido_center).tolist()
-        corpo_geometry = customGeometry(1, 1, 1, centered_corpo_vertices)
-        corpo_material = PhongMaterial("")
+        corpo_geometry = CustomGeometry(1, 1, 1, centered_corpo_vertices, corpo_uv)
+        corpo_texture = Texture("images/dark_oak.jpg")
+        corpo_material = PhongMaterial(texture=corpo_texture, number_of_light_sources=2, use_shadow=True)
         self.corpo_mesh = Mesh(corpo_geometry, corpo_material)
         self.corpo_mesh.rotate_x(angulo)
         self.corpo_mesh.set_position([x, y, z])
 
-        tubo_inferior_vertices = my_obj_reader1('instrumentos/tubo_inferior.obj')
+        tubo_inferior_vertices, tubo_inferior_uv = my_obj_reader('instrumentos/tubo_inferior.obj')
         tubo_vertices_array = np.array(tubo_inferior_vertices)
         centered_tubo_vertices = (tubo_vertices_array - tecido_center).tolist()
-        tubo_inferior_geometry = customGeometry(1, 1, 1, centered_tubo_vertices)
-        tubo_inferior_material = SurfaceMaterial(property_dict={"useVertexColors": True})
+        tubo_inferior_geometry = CustomGeometry(1, 1, 1, centered_tubo_vertices, tubo_inferior_uv)
+        tubo_inferior_texture = Texture("images/dark_oak.jpg")
+        tubo_inferior_material = PhongMaterial(texture=tubo_inferior_texture, number_of_light_sources=2, use_shadow=True)
         self.tubo_inferior_mesh = Mesh(tubo_inferior_geometry, tubo_inferior_material)
         self.tubo_inferior_mesh.rotate_x(angulo)
         self.tubo_inferior_mesh.set_position([x, y, z])
