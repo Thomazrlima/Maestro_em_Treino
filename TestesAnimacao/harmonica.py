@@ -10,7 +10,7 @@ from extras.axes import AxesHelper
 from extras.grid import GridHelper
 from extras.movement_rig import MovementRig
 from material.surface import SurfaceMaterial
-from core.obj_reader_harmonica import my_obj_reader  
+from core.obj_reader_harmonica import my_obj_reader
 from geometry.harmonicGeometry import customGeometry
 from geometry.custom import CustomGeometry
 from light.ambient_light import AmbientLight
@@ -41,7 +41,7 @@ class Example(Base):
         #self.scene.add(self.rig2)
         #self.rig2.set_position([0, 5, 4])
         v, uv = my_obj_reader('instrumentos/harmonic.obj')
-        
+
         self.rig = MovementRig()
         self.rig.set_position([0.5, 0.8, 3])
         self.rig.rotate_y(math.pi)
@@ -170,10 +170,10 @@ class Example(Base):
         self.rig.add(sphere2_baixo)
         self.rig.add(sphere_baixo)
         self.rig.add(main)
-        
+
         self.scene.add(self.rig)
         #self.scene.add(AxesHelper(axis_length=2))
-        
+
         #grid = GridHelper(size=20, grid_color=[1, 1, 1], center_color=[1, 1, 0])
         #grid.rotate_x(-math.pi / 2)
        # self.scene.add(grid)
@@ -187,11 +187,11 @@ class Example(Base):
         self.last_key_pressed = None
         self.animation_start_time = 0
         self.animation_duration = 1.0
-        self.animation_speed = 1.0 
+        self.animation_speed = 1.0
         self.animation_start_position = [0, 0.5, -0.5]
-        
+
         self.animations = {
-            'q': {'direction': [1.0, 0.0, 0.0], 'intensity': 1.0}, 
+            'q': {'direction': [1.0, 0.0, 0.0], 'intensity': 1.0},
             'w': {'direction': [-1.0, 0.0, 0.0], 'intensity': 1.0},
             'e': {'direction': [1.0, 0.0, 0.0], 'intensity': 0.8, 'oscillate': True},
             'r': {'direction': [-1.0, 0.0, 0.0], 'intensity': 0.8, 'oscillate': True},
@@ -253,7 +253,7 @@ class Example(Base):
             return
 
         elapsed = (self.time - self.animation_start_time) * self.animation_speed
-        
+
         if elapsed > self.animation_duration:
             self.animation_active = False
             self.rig.set_position(self.animation_start_position)
@@ -262,22 +262,22 @@ class Example(Base):
             return
 
         progress = elapsed / self.animation_duration
-        
+
         anim_params = self.animations[self.current_animation]
         direction = anim_params['direction']
         intensity = anim_params['intensity']
-        
+
         if anim_params.get('oscillate', False):
             movement_progress = math.sin(progress * 2 * math.pi)
         else:
             movement_progress = math.sin(progress * math.pi)
-        
+
         displacement = [
             direction[0] * intensity * movement_progress * 2,
             direction[1] * intensity * movement_progress * 2,
             0
         ]
-        
+
         new_position = [
             self.animation_start_position[0] ,
             self.animation_start_position[1] + displacement[1],
@@ -830,6 +830,7 @@ class Example(Base):
 
     def update(self):
         self.audio.set_sound_volume('blowI', 2)
+
         for key in self.animations:
             if self.input.is_key_pressed(key) and not self.animation_active:
                 if self.input.is_key_down('q'):
@@ -889,7 +890,7 @@ class Example(Base):
                 if self.input.is_key_down('i'):
                     print("Key 'i' pressed")
                     self.audio.play('blowI')
-                                    
+
         self.update_animation(self.delta_time)
         self.rig.update(self.input, self.delta_time)
         self.renderer.render(self.scene, self.camera)

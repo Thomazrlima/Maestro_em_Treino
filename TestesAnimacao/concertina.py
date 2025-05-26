@@ -26,11 +26,14 @@ from material.phong import PhongMaterial
 from core_ext.audio import Audio
 from core_ext.texture import Texture
 from geometry.custom import CustomGeometry
+from score.score import Score
 
 from menu import SCREEN_HEIGHT, SCREEN_WIDTH
 class ConcertinaAnimation(Base):
     def initialize(self):
         print("Initializing concertina animation...")
+
+
         self.renderer = Renderer()
         self.scene = Scene()
         self.camera = Camera(aspect_ratio=800/600)
