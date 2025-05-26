@@ -2,7 +2,15 @@ import pygame
 import sys
 import subprocess
 import os
+from core_ext.audio import Audio
 
+audio = Audio()
+audio.load(
+    name='elevator',
+    filepath='used_sounds/elevador.mp3'
+)
+audio.set_master_volume(3)
+audio.play(name='elevator')
 pygame.init()
 
 info = pygame.display.Info()
