@@ -67,9 +67,10 @@ class TriangleAnimation(Base):
         self.drumstick_progress = 0
 
     def load_objects(self):
-        x = -2
-        y = 7
-        z = 24
+        self.x = -2
+        self.y = 7
+        self.z = 24
+
         angulo = 0
 
         v, uv = my_obj_reader('instrumentos/triangulo.obj')
@@ -86,12 +87,12 @@ class TriangleAnimation(Base):
         material = TextureMaterial(texture=Texture("images/metal.jpg"))
         self.triangle = Mesh(geometry, material)
         self.triangle.rotate_x(angulo)
-        self.triangle.set_position([x, y, z])
+        self.triangle.set_position([self.x, self.y, self.z])
 
         geometry = CustomGeometry(pos_d=fio_verts, uv=fio_tx)
         material = TextureMaterial(texture=Texture("images/tecido.jpg"))
         self.fio = Mesh(geometry, material)
-        self.fio.set_position([x, y, z])
+        self.fio.set_position([self.x, self.y, self.z])
 
         v, uv = my_obj_reader('instrumentos/baqueta.obj')
         tubo_bastao_verts = np.array(v[:372], dtype=np.float32)
@@ -103,14 +104,14 @@ class TriangleAnimation(Base):
         material = TextureMaterial(texture=Texture("images/metal.jpg"))
         self.drumstick_tubo = Mesh(geometry, material)
         self.drumstick_tubo.rotate_x(angulo)
-        self.drumstick_tubo.set_position([x + 1, y - 1, z])
-        self.drumstick_tubo_initial_position = [x + 1, y - 1, z]
+        self.drumstick_tubo.set_position([self.x + 1, self.y - 1, self.z])
+        self.drumstick_tubo_initial_position = [self.x + 1, self.y - 1, self.z]
 
         geometry = CustomGeometry(pos_d=pega_bastao_verts, uv=pega_bastao_tx)
         material = TextureMaterial(texture=Texture("images/madeira.jpg"))
         self.drumstick_pega = Mesh(geometry, material)
-        self.drumstick_pega.set_position([x + 1, y - 1, z])
-        self.drumstick_pega_initial_position = [x + 1, y - 1, z]
+        self.drumstick_pega.set_position([self.x + 1, self.y - 1, self.z])
+        self.drumstick_pega_initial_position = [self.x + 1, self.y - 1, self.z]
 
 
         #drumstick_vertices, drumstick_uvs = my_obj_reader('instrumentos/baqueta.obj')
@@ -119,8 +120,8 @@ class TriangleAnimation(Base):
         #material = SurfaceMaterial(property_dict={"useVertexColors": True})
         #self.drumstick = Mesh(geometry, material)
         #self.drumstick.rotate_x(angulo)
-        #self.drumstick.set_position([x+1, y-1, z])
-        #self.drumstick_initial_position = [x+1, y-1, z]
+        #self.drumstick.set_position([self.x+1, self.y-1, self.z])
+        #self.drumstick_initial_position = [self.x+1, self.y-1, self.z]
 
     def hit_triangle(self):
         self.drumstick_state = "moving_forward"
@@ -140,16 +141,16 @@ class TriangleAnimation(Base):
             #self.drumstick.set_rotation([0, 0, -self.drumstick_progress * math.pi / 4])
 
             self.drumstick_tubo.set_position([
-                1 - self.drumstick_progress * 0.8,
-                1 - self.drumstick_progress * 0.4,
-                0
+                self.x + 1 - self.drumstick_progress * 0.8,
+                self.y - 1 - self.drumstick_progress * 0.4,
+                self.z
             ])
             self.drumstick_tubo.set_rotation([0, 0, -self.drumstick_progress * math.pi / 4])
 
             self.drumstick_pega.set_position([
-                1 - self.drumstick_progress * 0.8,
-                1 - self.drumstick_progress * 0.4,
-                0
+                self.x + 1 - self.drumstick_progress * 0.8,
+                self.y - 1 - self.drumstick_progress * 0.4,
+                self.z
             ])
             self.drumstick_pega.set_rotation([0, 0, -self.drumstick_progress * math.pi / 4])
 
@@ -162,9 +163,9 @@ class TriangleAnimation(Base):
             self.drumstick_progress = min(1.0, (self.time - self.hit_time) / 0.4)
 
             self.drumstick_tubo.set_position([
-                0.2 + self.drumstick_progress * 0.8,
-                0.6 + self.drumstick_progress * 0.4,
-                0
+                self.x + 0.2 + self.drumstick_progress * 0.8,
+                self.y - 0.9 + self.drumstick_progress * 0.4,
+                self.z
             ])
             self.drumstick_tubo.set_rotation([
                 0,
@@ -172,9 +173,9 @@ class TriangleAnimation(Base):
                 -math.pi / 4 + self.drumstick_progress * math.pi / 4
             ])
             self.drumstick_pega.set_position([
-                0.2 + self.drumstick_progress * 0.8,
-                0.6 + self.drumstick_progress * 0.4,
-                0
+                self.x + 0.2 + self.drumstick_progress * 0.8,
+                self.y - 0.9 + self.drumstick_progress * 0.4,
+                self.z
             ])
             self.drumstick_pega.set_rotation([
                 0,
