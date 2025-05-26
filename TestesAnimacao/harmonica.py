@@ -814,7 +814,7 @@ class Example(Base):
         pessoa.translate(3, 0, 3)
         self.scene.add(pessoa)
 
-        # -----------------------------------------------PESSOA2---------------------------------------
+        # -----------------------------------------------PESSOA3---------------------------------------
         vertices, tex_coords = my_obj_reader('mapa_objs/pessoa.obj')
         pessoa_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
         pessoa_material = TextureMaterial(texture=Texture("images/pessoa_amarelo.jpg"))

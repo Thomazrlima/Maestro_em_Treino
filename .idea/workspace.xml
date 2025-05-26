@@ -7,7 +7,9 @@
     <list default="true" id="b12815cd-b211-49b2-89f2-9d4fe0412dcd" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TestesAnimacao/concertina.py" beforeDir="false" afterPath="$PROJECT_DIR$/TestesAnimacao/concertina.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TestesAnimacao/gaita.py" beforeDir="false" afterPath="$PROJECT_DIR$/TestesAnimacao/gaita.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TestesAnimacao/harmonica.py" beforeDir="false" afterPath="$PROJECT_DIR$/TestesAnimacao/harmonica.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TestesAnimacao/triangulo.py" beforeDir="false" afterPath="$PROJECT_DIR$/TestesAnimacao/triangulo.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -55,17 +57,17 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "git-widget-placeholder": "final",
-    "last_opened_file_path": "/home/nanashi/Desktop/CG_Projeto/TestesAnimacao/images",
+    "last_opened_file_path": "/home/nanashi/Desktop/CG_Projeto/TestesAnimacao/mapa_objs",
     "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
   }
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/TestesAnimacao/mapa_objs" />
       <recent name="$PROJECT_DIR$/TestesAnimacao/images" />
       <recent name="$PROJECT_DIR$/Maestro_em_Treino/TestesAnimacao/instrumentos" />
       <recent name="$PROJECT_DIR$/Maestro_em_Treino/TestesAnimacao/images" />
       <recent name="$PROJECT_DIR$/Maestro_em_Treino/TestesAnimacao/extras" />
-      <recent name="$PROJECT_DIR$/Maestro_em_Treino/TestesAnimacao/light" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/Maestro_em_Treino/TestesAnimacao/mapa_objs" />

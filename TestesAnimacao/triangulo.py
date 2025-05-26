@@ -741,6 +741,41 @@ class TriangleAnimation(Base):
 
         self.scene.add(loja)
 
+        #-----------------------------------------------PESSOA1---------------------------------------------
+
+        vertices, tex_coords = my_obj_reader('mapa_objs/sit_Mam.obj')
+        pessoa_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
+
+        pessoa_material = TextureMaterial(
+            texture=Texture("images/pessoa_amarelo.jpg")
+        )
+
+        pessoa = Mesh(pessoa_geometry, pessoa_material)
+        pessoa.scale(4)
+        pessoa.rotate_y(math.pi-math.pi/5)
+        pessoa.translate(3, 0.1, -0.3)
+        self.scene.add(pessoa)
+
+        # -----------------------------------------------PESSOA2---------------------------------------
+        vertices, tex_coords = my_obj_reader('mapa_objs/pessoa.obj')
+        pessoa_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
+        pessoa_material = TextureMaterial(texture=Texture("images/pessoa_vermelho.jpeg"))
+        pessoa = Mesh(pessoa_geometry, pessoa_material)
+        pessoa.scale(4)
+        pessoa.rotate_y(math.pi / 2 + math.pi / 6)
+        pessoa.translate(-3, 0, 3)
+        self.scene.add(pessoa)
+
+        # -----------------------------------------------PESSOA3---------------------------------------
+        vertices, tex_coords = my_obj_reader('mapa_objs/pessoa.obj')
+        pessoa_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
+        pessoa_material = TextureMaterial(texture=Texture("images/pessoa_azul.jpg"))
+        pessoa = Mesh(pessoa_geometry, pessoa_material)
+        pessoa.scale(4)
+        pessoa.rotate_y(math.pi / 2)
+        pessoa.translate(0, 0, 3)
+        self.scene.add(pessoa)
+
         self.directional_light.set_position([30, 30, 30])
         self.directional_light.set_direction([10, -1, -90])
     def update(self):
