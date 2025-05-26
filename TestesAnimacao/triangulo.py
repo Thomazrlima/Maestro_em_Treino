@@ -42,8 +42,12 @@ class TriangleAnimation(Base):
         self.rig = MovementRig()
         self.rig.add(self.triangle)
         self.rig.add(self.drumstick)
-        self.rig.set_position([0, 0.5, 0])
+        self.camera.rotate_y(math.pi / 2)
+        self.camera.rotate_x(-math.pi / 7)
+        self.camera.set_position([27, 8, 0])
         self.scene.add(self.rig)
+
+        self.rig.disable_movement()
 
         # self.scene.add(AxesHelper(axis_length=2))
         # grid = GridHelper(size=20, grid_color=[1, 1, 1], center_color=[1, 1, 0])
@@ -60,8 +64,8 @@ class TriangleAnimation(Base):
         self.drumstick_progress = 0
 
     def load_objects(self):
-        x = 0
-        y = 0
+        x = 21
+        y = 6
         z = 0
         angulo = 0
 

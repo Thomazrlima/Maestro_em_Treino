@@ -1,0 +1,2109 @@
+Index: TestesAnimacao/extras/movement_rig.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import pygame\nimport math\nfrom core_ext.object3d import Object3D\n\n\nclass MovementRig(Object3D):\n    def __init__(self, units_per_second=1, degrees_per_second=60):\n        super().__init__()\n        self._look_attachment = Object3D()\n        self.children_list = [self._look_attachment]\n        self._look_attachment.parent = self\n        self._units_per_second = units_per_second\n        self._degrees_per_second = degrees_per_second\n        self._mouse_sensitivity = 0.01\n        self._current_pitch = 0\n        self._current_yaw = 0\n        self._target_height = 0\n        self._current_height = 0\n\n        # Limites de movimento\n        self.MIN_X = -33\n        self.MAX_X = 33\n        self.MIN_Z = -33\n        self.MAX_Z = 33\n\n        self.KEY_MOVE_FORWARDS = \"w\"\n        self.KEY_MOVE_BACKWARDS = \"s\"\n        self.KEY_MOVE_LEFT = \"a\"\n        self.KEY_MOVE_RIGHT = \"d\"\n        self.KEY_MOVE_UP = \"r\"\n        self.KEY_MOVE_DOWN = \"f\"\n        self.KEY_TURN_LEFT = \"q\"\n        self.KEY_TURN_RIGHT = \"e\"\n        self.KEY_LOOK_UP = \"t\"\n        self.KEY_LOOK_DOWN = \"g\"\n        self.KEY_SPRINT = \"left shift\"\n        self.KEY_CROUCH = \"left ctrl\"\n        self.KEY_JUMP = \"space\"\n        self.KEY_RESTART_POSITION = \"-\"\n\n        self.SPRINT_MULTIPLIER = 2.0\n        self.CROUCH_FACTOR = 0.5\n        self.CROUCH_HEIGHT = -2\n        self.HEIGHT_SPEED = 3.0\n\n        self.JUMP_HEIGHT = 3.0\n        self.GRAVITY = 17.0\n        self.jump_velocity = 0\n        self.is_jumping = False\n        self.is_grounded = True\n\n    def disable_movement(self):\n        self._movement_enabled = False\n\n    def enable_movement(self):\n        self._movement_enabled = True\n\n    def get_position(self):\n        \"\"\"Returns the current position as a list [x, y, z]\"\"\"\n        # The position is stored in the last column of the transformation matrix\n        return list(self.local_matrix[0:3, 3])\n\n    def add(self, child):\n        self._look_attachment.add(child)\n\n    def remove(self, child):\n        self._look_attachment.remove(child)\n\n    def _can_move(self, dx, dz):\n        new_x = self.local_position[0] + dx\n        new_z = self.local_position[2] + dz\n        x_in_bounds = self.MIN_X <= new_x <= self.MAX_X\n        z_in_bounds = self.MIN_Z <= new_z <= self.MAX_Z\n\n        if not x_in_bounds or not z_in_bounds:\n            return False\n\n        return True\n\n    def update(self, input_object, delta_time):\n        move_amount = self._units_per_second * delta_time\n        rotate_amount = self._degrees_per_second * (math.pi / 180) * delta_time\n\n        sprint_active = input_object.is_key_pressed(self.KEY_SPRINT)\n        crouching = input_object.is_key_pressed(self.KEY_CROUCH)\n        speed_multiplier = 1.0\n        if self._movement_enabled:\n            if sprint_active and not crouching:\n                speed_multiplier *= self.SPRINT_MULTIPLIER\n            if crouching:\n                speed_multiplier *= self.CROUCH_FACTOR\n\n            if input_object.is_key_down(self.KEY_JUMP) and self.is_grounded and not crouching:\n                self.is_jumping = True\n                self.is_grounded = False\n                self.jump_velocity = math.sqrt(2 * self.GRAVITY * self.JUMP_HEIGHT)\n\n            if not self.is_grounded:\n                self.jump_velocity -= self.GRAVITY * delta_time * 1.5\n                height_change = self.jump_velocity * delta_time\n                self._current_height += height_change\n\n                if self._current_height <= 0:\n                    self._current_height = 0\n                    self.is_grounded = True\n                    self.is_jumping = False\n                    self.jump_velocity = 0\n\n                self._look_attachment.translate(0, height_change, 0, local=False)\n\n            if crouching and self.is_grounded:\n                self._target_height = self.CROUCH_HEIGHT\n                height_diff = self._target_height - self._current_height\n                if abs(height_diff) > 0.01:\n                    move = height_diff * self.HEIGHT_SPEED * delta_time\n                    self._current_height += move\n                    self._look_attachment.translate(0, move, 0, local=False)\n            elif not crouching and self.is_grounded and not self.is_jumping:\n                self._target_height = 0\n                height_diff = self._target_height - self._current_height\n                if abs(height_diff) > 0.01:\n                    move = height_diff * self.HEIGHT_SPEED * delta_time\n                    self._current_height += move\n                    self._look_attachment.translate(0, move, 0, local=False)\n\n            if input_object.is_key_pressed(self.KEY_MOVE_FORWARDS):\n                if self._can_move(0, -move_amount * 7 * speed_multiplier):\n                    self.translate(0, 0, -move_amount * 7 * speed_multiplier)\n            if input_object.is_key_pressed(self.KEY_MOVE_BACKWARDS):\n                if self._can_move(0, move_amount * 6 * speed_multiplier):\n                    self.translate(0, 0, move_amount * 6 * speed_multiplier)\n            if input_object.is_key_pressed(self.KEY_MOVE_LEFT):\n                if self._can_move(-move_amount * 7 * speed_multiplier, 0):\n                    self.translate(-move_amount * 7 * speed_multiplier, 0, 0)\n            if input_object.is_key_pressed(self.KEY_MOVE_RIGHT):\n                if self._can_move(move_amount * 7 * speed_multiplier, 0):\n                    self.translate(move_amount * 7 * speed_multiplier, 0, 0)\n\n            if input_object.mouse_captured:\n                rel_x, rel_y = input_object.mouse_rel\n\n                yaw_change = -rel_x * self._mouse_sensitivity\n                pitch_change = -rel_y * self._mouse_sensitivity\n\n                self.rotate_y(yaw_change, True)\n                self._current_yaw += yaw_change\n\n                new_pitch = self._current_pitch + pitch_change\n                if abs(new_pitch) < math.pi / 2:\n                    self._look_attachment.rotate_x(pitch_change, True)\n                    self._current_pitch = new_pitch\n\n                if pygame.display.get_init():\n                    center = pygame.display.get_surface().get_rect().center\n                    pygame.mouse.set_pos(center)\n            else:\n                if input_object.is_key_pressed(self.KEY_TURN_RIGHT):\n                    self.rotate_y(-rotate_amount, True)\n                if input_object.is_key_pressed(self.KEY_TURN_LEFT):\n                    self.rotate_y(rotate_amount, True)\n                if input_object.is_key_pressed(self.KEY_LOOK_UP):\n                    self._look_attachment.rotate_x(-rotate_amount, True)\n                if input_object.is_key_pressed(self.KEY_LOOK_DOWN):\n                    self._look_attachment.rotate_x(rotate_amount, True)\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/TestesAnimacao/extras/movement_rig.py b/TestesAnimacao/extras/movement_rig.py
+--- a/TestesAnimacao/extras/movement_rig.py	(revision 7328e34e21a8e8e8c8e19c39fbc4326400bd1439)
++++ b/TestesAnimacao/extras/movement_rig.py	(date 1748217188698)
+@@ -84,81 +84,81 @@
+         sprint_active = input_object.is_key_pressed(self.KEY_SPRINT)
+         crouching = input_object.is_key_pressed(self.KEY_CROUCH)
+         speed_multiplier = 1.0
+-        if self._movement_enabled:
+-            if sprint_active and not crouching:
+-                speed_multiplier *= self.SPRINT_MULTIPLIER
+-            if crouching:
+-                speed_multiplier *= self.CROUCH_FACTOR
++
++        if sprint_active and not crouching:
++            speed_multiplier *= self.SPRINT_MULTIPLIER
++        if crouching:
++            speed_multiplier *= self.CROUCH_FACTOR
+ 
+-            if input_object.is_key_down(self.KEY_JUMP) and self.is_grounded and not crouching:
+-                self.is_jumping = True
+-                self.is_grounded = False
+-                self.jump_velocity = math.sqrt(2 * self.GRAVITY * self.JUMP_HEIGHT)
++        if input_object.is_key_down(self.KEY_JUMP) and self.is_grounded and not crouching:
++            self.is_jumping = True
++            self.is_grounded = False
++            self.jump_velocity = math.sqrt(2 * self.GRAVITY * self.JUMP_HEIGHT)
+ 
+-            if not self.is_grounded:
+-                self.jump_velocity -= self.GRAVITY * delta_time * 1.5
+-                height_change = self.jump_velocity * delta_time
+-                self._current_height += height_change
++        if not self.is_grounded:
++            self.jump_velocity -= self.GRAVITY * delta_time * 1.5
++            height_change = self.jump_velocity * delta_time
++            self._current_height += height_change
+ 
+-                if self._current_height <= 0:
+-                    self._current_height = 0
+-                    self.is_grounded = True
+-                    self.is_jumping = False
+-                    self.jump_velocity = 0
++            if self._current_height <= 0:
++                self._current_height = 0
++                self.is_grounded = True
++                self.is_jumping = False
++                self.jump_velocity = 0
+ 
+-                self._look_attachment.translate(0, height_change, 0, local=False)
++            self._look_attachment.translate(0, height_change, 0, local=False)
+ 
+-            if crouching and self.is_grounded:
+-                self._target_height = self.CROUCH_HEIGHT
+-                height_diff = self._target_height - self._current_height
+-                if abs(height_diff) > 0.01:
+-                    move = height_diff * self.HEIGHT_SPEED * delta_time
+-                    self._current_height += move
+-                    self._look_attachment.translate(0, move, 0, local=False)
+-            elif not crouching and self.is_grounded and not self.is_jumping:
+-                self._target_height = 0
+-                height_diff = self._target_height - self._current_height
+-                if abs(height_diff) > 0.01:
+-                    move = height_diff * self.HEIGHT_SPEED * delta_time
+-                    self._current_height += move
+-                    self._look_attachment.translate(0, move, 0, local=False)
++        if crouching and self.is_grounded:
++            self._target_height = self.CROUCH_HEIGHT
++            height_diff = self._target_height - self._current_height
++            if abs(height_diff) > 0.01:
++                move = height_diff * self.HEIGHT_SPEED * delta_time
++                self._current_height += move
++                self._look_attachment.translate(0, move, 0, local=False)
++        elif not crouching and self.is_grounded and not self.is_jumping:
++            self._target_height = 0
++            height_diff = self._target_height - self._current_height
++            if abs(height_diff) > 0.01:
++                move = height_diff * self.HEIGHT_SPEED * delta_time
++                self._current_height += move
++                self._look_attachment.translate(0, move, 0, local=False)
+ 
+-            if input_object.is_key_pressed(self.KEY_MOVE_FORWARDS):
+-                if self._can_move(0, -move_amount * 7 * speed_multiplier):
+-                    self.translate(0, 0, -move_amount * 7 * speed_multiplier)
+-            if input_object.is_key_pressed(self.KEY_MOVE_BACKWARDS):
+-                if self._can_move(0, move_amount * 6 * speed_multiplier):
+-                    self.translate(0, 0, move_amount * 6 * speed_multiplier)
+-            if input_object.is_key_pressed(self.KEY_MOVE_LEFT):
+-                if self._can_move(-move_amount * 7 * speed_multiplier, 0):
+-                    self.translate(-move_amount * 7 * speed_multiplier, 0, 0)
+-            if input_object.is_key_pressed(self.KEY_MOVE_RIGHT):
+-                if self._can_move(move_amount * 7 * speed_multiplier, 0):
+-                    self.translate(move_amount * 7 * speed_multiplier, 0, 0)
++        if input_object.is_key_pressed(self.KEY_MOVE_FORWARDS):
++            if self._can_move(0, -move_amount * 7 * speed_multiplier):
++                self.translate(0, 0, -move_amount * 7 * speed_multiplier)
++        if input_object.is_key_pressed(self.KEY_MOVE_BACKWARDS):
++            if self._can_move(0, move_amount * 6 * speed_multiplier):
++                self.translate(0, 0, move_amount * 6 * speed_multiplier)
++        if input_object.is_key_pressed(self.KEY_MOVE_LEFT):
++            if self._can_move(-move_amount * 7 * speed_multiplier, 0):
++                self.translate(-move_amount * 7 * speed_multiplier, 0, 0)
++        if input_object.is_key_pressed(self.KEY_MOVE_RIGHT):
++            if self._can_move(move_amount * 7 * speed_multiplier, 0):
++                self.translate(move_amount * 7 * speed_multiplier, 0, 0)
+ 
+-            if input_object.mouse_captured:
+-                rel_x, rel_y = input_object.mouse_rel
++        if input_object.mouse_captured:
++            rel_x, rel_y = input_object.mouse_rel
+ 
+-                yaw_change = -rel_x * self._mouse_sensitivity
+-                pitch_change = -rel_y * self._mouse_sensitivity
++            yaw_change = -rel_x * self._mouse_sensitivity
++            pitch_change = -rel_y * self._mouse_sensitivity
+ 
+-                self.rotate_y(yaw_change, True)
+-                self._current_yaw += yaw_change
++            self.rotate_y(yaw_change, True)
++            self._current_yaw += yaw_change
+ 
+-                new_pitch = self._current_pitch + pitch_change
+-                if abs(new_pitch) < math.pi / 2:
+-                    self._look_attachment.rotate_x(pitch_change, True)
+-                    self._current_pitch = new_pitch
++            new_pitch = self._current_pitch + pitch_change
++            if abs(new_pitch) < math.pi / 2:
++                self._look_attachment.rotate_x(pitch_change, True)
++                self._current_pitch = new_pitch
+ 
+-                if pygame.display.get_init():
+-                    center = pygame.display.get_surface().get_rect().center
+-                    pygame.mouse.set_pos(center)
+-            else:
+-                if input_object.is_key_pressed(self.KEY_TURN_RIGHT):
+-                    self.rotate_y(-rotate_amount, True)
+-                if input_object.is_key_pressed(self.KEY_TURN_LEFT):
+-                    self.rotate_y(rotate_amount, True)
+-                if input_object.is_key_pressed(self.KEY_LOOK_UP):
+-                    self._look_attachment.rotate_x(-rotate_amount, True)
+-                if input_object.is_key_pressed(self.KEY_LOOK_DOWN):
+-                    self._look_attachment.rotate_x(rotate_amount, True)
++            if pygame.display.get_init():
++                center = pygame.display.get_surface().get_rect().center
++                pygame.mouse.set_pos(center)
++        else:
++            if input_object.is_key_pressed(self.KEY_TURN_RIGHT):
++                self.rotate_y(-rotate_amount, True)
++            if input_object.is_key_pressed(self.KEY_TURN_LEFT):
++                self.rotate_y(rotate_amount, True)
++            if input_object.is_key_pressed(self.KEY_LOOK_UP):
++                self._look_attachment.rotate_x(-rotate_amount, True)
++            if input_object.is_key_pressed(self.KEY_LOOK_DOWN):
++                self._look_attachment.rotate_x(rotate_amount, True)
+\ No newline at end of file
+Index: TestesAnimacao/concertina.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import numpy as np\r\nimport math\r\nimport os\r\nfrom core.base import Base\r\nfrom core_ext.camera import Camera\r\nfrom core_ext.mesh import Mesh\r\nfrom core_ext.renderer import Renderer\r\nfrom core_ext.scene import Scene\r\nfrom extras.axes import AxesHelper\r\nfrom extras.grid import GridHelper\r\nfrom extras.movement_rig import MovementRig\r\nfrom material.texture import TextureMaterial\r\nfrom core.obj_reader_harmonica import my_obj_reader\r\nfrom geometry.harmonicGeometry import customGeometry\r\nfrom core_ext.texture import Texture\r\n\r\nclass ConcertinaAnimation(Base):\r\n    def initialize(self):\r\n        print(\"Initializing concertina animation...\")\r\n        self.renderer = Renderer()\r\n        self.scene = Scene()\r\n        self.camera = Camera(aspect_ratio=800/600)\r\n        self.camera.set_position([0, 1, 5])\r\n\r\n        self.base_fole_half_width = 2\r\n\r\n        fole_v, fole_uv = my_obj_reader('instrumentos/fole.obj')\r\n        fole_v = np.array(fole_v, dtype=np.float32)\r\n        fole_uv = np.array(fole_uv, dtype=np.float32)\r\n\r\n        fole_geometry = customGeometry(1, 1, 1, fole_v.tolist(), fole_uv.tolist())\r\n        fole_texture = Texture(file_name=\"images/branco.jpg\")\r\n        fole_material = TextureMaterial(texture=fole_texture)\r\n        self.fole = Mesh(fole_geometry, fole_material)\r\n        self.fole.set_position([0, 0, 0])\r\n\r\n        esq_v, esq_uv = my_obj_reader('instrumentos/sanfonadir.obj')\r\n        esq_v = np.array(esq_v, dtype=np.float32)\r\n        esq_uv = np.array(esq_uv, dtype=np.float32)\r\n\r\n        vermelho = TextureMaterial(Texture(\"images/vermelho.jpg\"))\r\n        branco1 = TextureMaterial(Texture(\"images/branco1.jpg\"))\r\n        escuro = TextureMaterial(Texture(\"images/escuro.jpg\"))\r\n\r\n        self.sanfonaesq = Mesh(customGeometry(1, 1, 1,\r\n                                              esq_v[0:5375].tolist(),\r\n                                              esq_uv[0:5375].tolist()), vermelho)\r\n        self.sanfonaver = Mesh(customGeometry(1, 1, 1,\r\n                                              esq_v[5376:7801].tolist(),\r\n                                              esq_uv[5376:7801].tolist()), escuro)\r\n        self.sanfonabra = Mesh(customGeometry(1, 1, 1,\r\n                                              esq_v[7802:17280].tolist(),\r\n                                              esq_uv[7802:17280].tolist()), branco1)\r\n\r\n        self.sanfonaesq.set_position([0, 0, 0])\r\n        self.sanfonaver.set_position([0, 0, 0])\r\n        self.sanfonabra.set_position([0, 0, 0])\r\n\r\n        dir_v, dir_uv = my_obj_reader('instrumentos/sanfonaesq.obj')\r\n        dir_v = np.array(dir_v, dtype=np.float32)\r\n        dir_uv = np.array(dir_uv, dtype=np.float32)\r\n\r\n        preto = TextureMaterial(Texture(\"images/preto.jpg\"))\r\n        print(f\"Número total de vértices em 'esq': {len(esq_v) // 3}\")\r\n\r\n        self.sanfonadir = Mesh(customGeometry(1, 1, 1,\r\n                                              dir_v[0:3623].tolist(),\r\n                                              dir_uv[0:3623].tolist()), vermelho)\r\n        self.sanfonadirbra = Mesh(customGeometry(1, 1, 1,\r\n                                                 dir_v[3624:4400].tolist(),\r\n                                                 dir_uv[3624:4400].tolist()), preto)\r\n        self.sanfonadirpreto = Mesh(customGeometry(1, 1, 1,\r\n                                                   dir_v[4401:9164].tolist(),\r\n                                                   dir_uv[4401:9164].tolist()), branco1)\r\n\r\n        self.sanfonadir.set_position([0, 0, 0])\r\n        self.sanfonadirbra.set_position([0, 0, 0])\r\n        self.sanfonadirpreto.set_position([0, 0, 0])\r\n\r\n        self.rig = MovementRig()\r\n        self.rig.add(self.fole)\r\n        self.rig.add(self.sanfonaesq)\r\n        self.rig.add(self.sanfonaver)\r\n        self.rig.add(self.sanfonabra)\r\n        self.rig.add(self.sanfonadir)\r\n        self.rig.add(self.sanfonadirbra)\r\n        self.rig.add(self.sanfonadirpreto)\r\n        self.rig.set_position([0, 0, 0])\r\n        self.scene.add(self.rig)\r\n\r\n        self.scene.add(AxesHelper(axis_length=2))\r\n        grid = GridHelper(size=20, grid_color=[1, 1, 1], center_color=[1, 1, 0])\r\n        grid.rotate_x(-math.pi / 2)\r\n        self.scene.add(grid)\r\n\r\n        self.animation_active = False\r\n        self.animation_duration = 2.0\r\n        self.animation_elapsed = 0.0\r\n        self.max_scale = 2.8\r\n\r\n    def update(self):\r\n        self.rig.update(self.input, self.delta_time)\r\n\r\n        if not self.animation_active and self.input.is_key_pressed('m'):\r\n            self.animation_active = True\r\n            self.animation_elapsed = 0.0\r\n\r\n        if self.animation_active:\r\n            self.animation_elapsed += self.delta_time\r\n            progress = self.animation_elapsed / self.animation_duration\r\n\r\n            if progress <= 0.5:\r\n                scale_x = 1.0 + (self.max_scale - 1.0) * (progress / 0.5)\r\n                move_factor = (progress / 0.5)\r\n                half_width = self.base_fole_half_width * move_factor\r\n            elif progress <= 1.0:\r\n                scale_x = self.max_scale - (self.max_scale - 1.0) * ((progress - 0.5) / 0.5)\r\n                move_factor = 1 - ((progress - 0.5) / 0.5)\r\n                half_width = self.base_fole_half_width * move_factor\r\n            else:\r\n                scale_x = 1.0\r\n                half_width = 0.0\r\n                self.animation_active = False\r\n        else:\r\n            scale_x = 1.0\r\n            half_width = 0.0\r\n\r\n        self.fole.set_scale([scale_x, 1, 1])\r\n        self.sanfonaesq.set_position([-half_width / 2, 0, 0])\r\n        self.sanfonaver.set_position([-half_width / 2, 0, 0])\r\n        self.sanfonabra.set_position([-half_width / 2, 0, 0])\r\n        self.sanfonadir.set_position([half_width / 2, 0, 0])\r\n        self.sanfonadirbra.set_position([half_width / 2, 0, 0])\r\n        self.sanfonadirpreto.set_position([half_width / 2, 0, 0])\r\n\r\n        self.renderer.render(self.scene, self.camera)\r\n\r\nConcertinaAnimation(screen_size=[800, 600]).run()\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/TestesAnimacao/concertina.py b/TestesAnimacao/concertina.py
+--- a/TestesAnimacao/concertina.py	(revision 7328e34e21a8e8e8c8e19c39fbc4326400bd1439)
++++ b/TestesAnimacao/concertina.py	(date 1748217132597)
+@@ -13,6 +13,19 @@
+ from core.obj_reader_harmonica import my_obj_reader
+ from geometry.harmonicGeometry import customGeometry
+ from core_ext.texture import Texture
++from light.ambient_light import AmbientLight
++from light.directional import DirectionalLight
++from material.lambert import LambertMaterial
++from extras.sun_light import SunLightHelper
++from extras.text_texture import TextTexture
++from material.texture import TextureMaterial
++from geometry.rectangle import RectangleGeometry
++from core.matrix import Matrix
++from geometry.sphere import SphereGeometry
++from material.phong import PhongMaterial
++from core_ext.audio import Audio
++from core_ext.texture import Texture
++from geometry.custom import CustomGeometry
+ 
+ class ConcertinaAnimation(Base):
+     def initialize(self):
+@@ -24,6 +37,13 @@
+ 
+         self.base_fole_half_width = 2
+ 
++        self.init_map()
++
++        x = 0
++        y = 0
++        z = 0
++        angulo = 0
++
+         fole_v, fole_uv = my_obj_reader('instrumentos/fole.obj')
+         fole_v = np.array(fole_v, dtype=np.float32)
+         fole_uv = np.array(fole_uv, dtype=np.float32)
+@@ -45,12 +65,18 @@
+         self.sanfonaesq = Mesh(customGeometry(1, 1, 1,
+                                               esq_v[0:5375].tolist(),
+                                               esq_uv[0:5375].tolist()), vermelho)
++        self.sanfonaesq.rotate_x(angulo)
++        self.sanfonaesq.set_position([x, y, z])
+         self.sanfonaver = Mesh(customGeometry(1, 1, 1,
+                                               esq_v[5376:7801].tolist(),
+                                               esq_uv[5376:7801].tolist()), escuro)
++        self.sanfonaver.rotate_x(angulo)
++        self.sanfonaver.set_position([x, y, z])
+         self.sanfonabra = Mesh(customGeometry(1, 1, 1,
+                                               esq_v[7802:17280].tolist(),
+                                               esq_uv[7802:17280].tolist()), branco1)
++        self.sanfonabra.rotate_x(angulo)
++        self.sanfonabra.set_position([x, y, z])
+ 
+         self.sanfonaesq.set_position([0, 0, 0])
+         self.sanfonaver.set_position([0, 0, 0])
+@@ -66,12 +92,19 @@
+         self.sanfonadir = Mesh(customGeometry(1, 1, 1,
+                                               dir_v[0:3623].tolist(),
+                                               dir_uv[0:3623].tolist()), vermelho)
++        self.sanfonadir.rotate_x(angulo)
++        self.sanfonadir.set_position([x, y, z])
++        
+         self.sanfonadirbra = Mesh(customGeometry(1, 1, 1,
+                                                  dir_v[3624:4400].tolist(),
+                                                  dir_uv[3624:4400].tolist()), preto)
++        self.sanfonadirbra.rotate_x(angulo)
++        self.sanfonadirbra.set_position([x, y, z])
+         self.sanfonadirpreto = Mesh(customGeometry(1, 1, 1,
+                                                    dir_v[4401:9164].tolist(),
+                                                    dir_uv[4401:9164].tolist()), branco1)
++        self.sanfonadirpreto.rotate_x(angulo)
++        self.sanfonadirpreto.set_position([x, y, z])
+ 
+         self.sanfonadir.set_position([0, 0, 0])
+         self.sanfonadirbra.set_position([0, 0, 0])
+@@ -88,16 +121,526 @@
+         self.rig.set_position([0, 0, 0])
+         self.scene.add(self.rig)
+ 
+-        self.scene.add(AxesHelper(axis_length=2))
+-        grid = GridHelper(size=20, grid_color=[1, 1, 1], center_color=[1, 1, 0])
+-        grid.rotate_x(-math.pi / 2)
+-        self.scene.add(grid)
++        # self.scene.add(AxesHelper(axis_length=2))
++        # grid = GridHelper(size=20, grid_color=[1, 1, 1], center_color=[1, 1, 0])
++        # grid.rotate_x(-math.pi / 2)
++        # self.scene.add(grid)
+ 
+         self.animation_active = False
+         self.animation_duration = 2.0
+         self.animation_elapsed = 0.0
+         self.max_scale = 2.8
+ 
++    def init_map(self):
++        n = 0
++        ambient_light = AmbientLight(color=[0.1 * n, 0.1 * n, 0.1 * n])
++        self.scene.add(ambient_light)
++
++        m = 1
++        self.directional_light = DirectionalLight(color=[0.8 * m, 0.8 * m, 0.8 * m], direction=[-1, -1, -2])
++        self.scene.add(self.directional_light)
++
++        self.sun_light_helper = SunLightHelper(self.directional_light, size=9)
++        self.sun_light_helper.set_position([0, 0, 11])
++
++        # self.directional_light.set_position([30, 30, 30])
++        # self.directional_light.set_direction([10, -1, -90])
++        # self.directional_light.set_position([70, 80, -95])
++        # self.directional_light.set_direction([0, -50, -90])
++
++        # self.directional_light.add(directional_light_helper)
++        self.directional_light.add(self.sun_light_helper)
++
++        self.renderer.enable_shadows(self.directional_light)
++
++        # --------------------------------------------------------------CEU-------------------------------------------------------------
++
++        sky_geometry = SphereGeometry(radius=250)
++        sky_material = TextureMaterial(texture=Texture(file_name="images/sky.jpg"))
++        sky = Mesh(sky_geometry, sky_material)
++        sky.rotate_y(2 * math.pi / 5)
++        self.scene.add(sky)
++
++        # -----------------------------------------------------------ALCATRAO-----------------------------------------------------------
++        vertices, tex_coords = my_obj_reader('mapa_objs/alcatrao.obj')
++
++        repeat_factor = 5.0
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++
++        alcatrao_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        alcatrao_material = LambertMaterial(
++            texture=Texture("images/Rubber004_4K-JPG_Color.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        alcatrao = Mesh(alcatrao_geometry, alcatrao_material)
++
++        self.scene.add(alcatrao)
++
++        # -----------------------------------------------------------PASSEIO-----------------------------------------------------------
++        vertices, tex_coords = my_obj_reader('mapa_objs/passeio.obj')
++
++        repeat_factor = 30
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++
++        passeio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        passeio_material = LambertMaterial(
++            texture=Texture("images/passeio.png"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        passeio = Mesh(passeio_geometry, passeio_material)
++
++        self.scene.add(passeio)
++
++        # -----------------------------------------------------------CALÇADA-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/calcada1.obj')
++
++        repeat_factor = 1
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++
++        calcada1_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        calcada1_material = LambertMaterial(
++            texture=Texture("images/calcada.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        calcada1 = Mesh(calcada1_geometry, calcada1_material)
++
++        self.scene.add(calcada1)
++        # -----------------------------------calçada2------------------------------------------
++        vertices, tex_coords = my_obj_reader('mapa_objs/calcada2.obj')
++
++        repeat_factor = 1
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++
++        calcada2_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        calcada2_material = LambertMaterial(
++            texture=Texture("images/calcada2.jpeg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        calcada2 = Mesh(calcada2_geometry, calcada2_material)
++
++        self.scene.add(calcada2)
++
++        # -----------------------------------calçada3------------------------------------------
++        vertices, tex_coords = my_obj_reader('mapa_objs/calcada3.obj')
++
++        repeat_factor = 1
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++
++        calcada3_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        calcada3_material = LambertMaterial(
++            texture=Texture("images/calcada.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        calcada3 = Mesh(calcada3_geometry, calcada3_material)
++
++        self.scene.add(calcada3)
++
++        # -----------------------------------calçada4------------------------------------------
++        vertices, tex_coords = my_obj_reader('mapa_objs/calcada4.obj')
++
++        repeat_factor = 1
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++
++        calcada4_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        calcada4_material = LambertMaterial(
++            texture=Texture("images/calcada3.jpeg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        calcada4 = Mesh(calcada4_geometry, calcada4_material)
++
++        self.scene.add(calcada4)
++
++        # -----------------------------------------------------------CERCA-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/cerca.obj')
++
++        repeat_factor = 1
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++
++        cerca_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        cerca_material = PhongMaterial(
++            texture=Texture("images/Metal029_4K-JPG_Color.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        cerca = Mesh(cerca_geometry, cerca_material)
++
++        self.scene.add(cerca)
++
++        # -----------------------------------------------------------FONTE-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/fonte.obj')
++
++        repeat_factor = 0.5
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++
++        fonte_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        fonte_material = PhongMaterial(
++            texture=Texture("images/stone.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        fonte = Mesh(fonte_geometry, fonte_material)
++
++        self.scene.add(fonte)
++
++        # -----------------------------------------------------------PALCO-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/palco.obj')
++
++        repeat_factor = 1
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++
++        palco_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        palco_material = PhongMaterial(
++            texture=Texture("images/fonte.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        palco = Mesh(palco_geometry, palco_material)
++
++        self.scene.add(palco)
++
++        # -----------------------------------------------------------Bancos-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/bancos.obj')
++
++        bancos_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        bancos_material = PhongMaterial(
++            texture=Texture("images/madeira2.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        bancos = Mesh(bancos_geometry, bancos_material)
++
++        self.scene.add(bancos)
++
++        # -----------------------------------------------------------PREDIO_1-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio1.obj')
++        repeat_factor = 5
++
++        tex_coords = [[u * repeat_factor, v / 3 * repeat_factor] for u, v in tex_coords]
++        predio1_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio1_material = PhongMaterial(
++            texture=Texture("images/predio1.jpeg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio1 = Mesh(predio1_geometry, predio1_material)
++
++        self.scene.add(predio1)
++
++        # -----------------------------------------------------------PREDIO_2-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio2.obj')
++        repeat_factor = 3
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++        predio2_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio2_material = PhongMaterial(
++            texture=Texture("images/predio2.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio2 = Mesh(predio2_geometry, predio2_material)
++
++        self.scene.add(predio2)
++
++        # -----------------------------------------------------------PREDIO_3-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio3.obj')
++        repeat_factor = 2
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++        predio3_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio3_material = PhongMaterial(
++            texture=Texture("images/predio3.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio3 = Mesh(predio3_geometry, predio3_material)
++
++        self.scene.add(predio3)
++
++        # -----------------------------------------------------------PREDIO_4-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio4.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 2.3 * repeat_factor] for u, v in tex_coords]
++        predio4_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio4_material = PhongMaterial(
++            texture=Texture("images/predio4.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio4 = Mesh(predio4_geometry, predio4_material)
++
++        self.scene.add(predio4)
++
++        # -----------------------------------------------------------PREDIO_5-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio5.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 1.5 * repeat_factor] for u, v in tex_coords]
++        predio5_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio5_material = PhongMaterial(
++            texture=Texture("images/predio6.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio5 = Mesh(predio5_geometry, predio5_material)
++
++        self.scene.add(predio5)
++
++        # -----------------------------------------------------------PREDIO_6-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio6.obj')
++        repeat_factor = 4
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++        predio4_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio4_material = PhongMaterial(
++            texture=Texture("images/predio5.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio4 = Mesh(predio4_geometry, predio4_material)
++
++        self.scene.add(predio4)
++
++        # -----------------------------------------------------------PREDIO_7-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio7.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 3 * repeat_factor] for u, v in tex_coords]
++        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio_material = PhongMaterial(
++            texture=Texture("images/predio7.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio = Mesh(predio_geometry, predio_material)
++
++        self.scene.add(predio)
++
++        # -----------------------------------------------------------PREDIO_8-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio8.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 2.3 * repeat_factor] for u, v in tex_coords]
++        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio_material = PhongMaterial(
++            texture=Texture("images/predio8.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio = Mesh(predio_geometry, predio_material)
++
++        self.scene.add(predio)
++
++        # -----------------------------------------------------------PREDIO_9-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio9.obj')
++        repeat_factor = 12
++
++        tex_coords = [[u * repeat_factor, v / 7 * repeat_factor] for u, v in tex_coords]
++        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio_material = PhongMaterial(
++            texture=Texture("images/predio9.jpeg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio = Mesh(predio_geometry, predio_material)
++
++        self.scene.add(predio)
++
++        # -----------------------------------------------------------PREDIO_10-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio10.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 3 * repeat_factor] for u, v in tex_coords]
++        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio_material = PhongMaterial(
++            texture=Texture("images/predio10.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio = Mesh(predio_geometry, predio_material)
++
++        self.scene.add(predio)
++
++        # -----------------------------------------------------------PREDIO_11-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio11.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 3 * repeat_factor] for u, v in tex_coords]
++        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio_material = PhongMaterial(
++            texture=Texture("images/predio7.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio = Mesh(predio_geometry, predio_material)
++
++        self.scene.add(predio)
++
++        # -----------------------------------------------------------PREDIO_12-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio12.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 4 * repeat_factor] for u, v in tex_coords]
++        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio_material = PhongMaterial(
++            texture=Texture("images/predio8.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio = Mesh(predio_geometry, predio_material)
++
++        self.scene.add(predio)
++
++        # -----------------------------------------------------------PREDIO_13-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio13.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 2.3 * repeat_factor] for u, v in tex_coords]
++        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio_material = PhongMaterial(
++            texture=Texture("images/predio4.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio = Mesh(predio_geometry, predio_material)
++
++        self.scene.add(predio)
++
++        # -----------------------------------------------------------PREDIO_14-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio14.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 2.3 * repeat_factor] for u, v in tex_coords]
++        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio_material = PhongMaterial(
++            texture=Texture("images/predio11.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio = Mesh(predio_geometry, predio_material)
++
++        self.scene.add(predio)
++
++        # -----------------------------------------------------------PREDIO_15-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio15.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 2.3 * repeat_factor] for u, v in tex_coords]
++        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio_material = PhongMaterial(
++            texture=Texture("images/predio4.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio = Mesh(predio_geometry, predio_material)
++
++        self.scene.add(predio)
++
++        # -----------------------------------------------------------LOJA-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/loja.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u / 1.66 * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++        loja_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        loja_material = PhongMaterial(
++            texture=Texture("images/predio_loja.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        loja = Mesh(loja_geometry, loja_material)
++
++        self.scene.add(loja)
++
++        self.directional_light.set_position([30, 30, 30])
++        self.directional_light.set_direction([10, -1, -90])
+     def update(self):
+         self.rig.update(self.input, self.delta_time)
+ 
+Index: TestesAnimacao/instrument_menu.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import pygame\nimport sys\nimport subprocess\nimport os\n\npygame.init()\n\nSCREEN_WIDTH = 800\nSCREEN_HEIGHT = 600\nscreen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))\npygame.display.set_caption(\"Maestro em Treino\")\n\nWHITE = (255, 255, 255)\nBLACK = (20, 20, 20)\nGRAY = (240, 240, 240)\nBLUE = (50, 100, 255)\nHOVER_BLUE = (30, 80, 220)\nDARK_BLUE = (20, 40, 100)\nSHADOW = (0, 0, 0, 100)\n\nfont_large = pygame.font.SysFont('Georgia', 60, bold=True)\nfont_medium = pygame.font.SysFont('Verdana', 28)\nfont_small = pygame.font.SysFont('Verdana', 22)\n\ndef draw_gradient_background():\n    for y in range(SCREEN_HEIGHT):\n        color = (\n            255 - y // 3,\n            255 - y // 5,\n            255\n        )\n        pygame.draw.line(screen, color, (0, y), (SCREEN_WIDTH, y))\n\nclass Button:\n    def __init__(self, x, y, width, height, text, action=None):\n        self.rect = pygame.Rect(x, y, width, height)\n        self.text = text\n        self.action = action\n        self.is_hovered = False\n\n    def draw(self, surface):\n        shadow_rect = self.rect.copy()\n        shadow_rect.move_ip(4, 4)\n        pygame.draw.rect(surface, GRAY, shadow_rect, border_radius=10)\n\n        color = HOVER_BLUE if self.is_hovered else BLUE\n        pygame.draw.rect(surface, color, self.rect, border_radius=10)\n\n        pygame.draw.rect(surface, DARK_BLUE, self.rect, 2, border_radius=10)\n\n        text_surf = font_medium.render(self.text, True, WHITE)\n        text_rect = text_surf.get_rect(center=self.rect.center)\n        surface.blit(text_surf, text_rect)\n\n    def check_hover(self, pos):\n        self.is_hovered = self.rect.collidepoint(pos)\n\n    def execute_action(self):\n        if self.action:\n            print(f\"Executando: {self.action}\")\n            try:\n                if self.action.endswith(\".py\"):\n                    pygame.quit()\n                    subprocess.run([sys.executable, self.action])\n                    pygame.init()\n                    global screen\n                    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))\n                elif self.action == \"exit\":\n                    pygame.quit()\n                    sys.exit()\n            except Exception as e:\n                print(f\"Erro ao executar o script: {e}\")\n\n\ndef instrument_menu():\n    buttons = [\n        Button(SCREEN_WIDTH // 2 - 150, 180, 300, 60, \"Harmónica\", \"harmonica.py\"),\n        Button(SCREEN_WIDTH // 2 - 150, 260, 300, 60, \"Gaita\", \"gaita.py\"),\n        Button(SCREEN_WIDTH // 2 - 150, 340, 300, 60, \"Concertina\", \"concertina.py\"),\n        Button(SCREEN_WIDTH // 2 - 150, 420, 300, 60, \"Triângulo\", \"triangulo.py\")\n    ]\n\n    font_large = pygame.font.SysFont(None, 75)\n    pygame.display.set_caption(\"Selecione o seu instrumento\")\n    running = True\n\n    while running:\n        mouse_pos = pygame.mouse.get_pos()\n\n        for event in pygame.event.get():\n            if event.type == pygame.QUIT:\n                running = False\n\n            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:\n                for button in buttons:\n                    if button.rect.collidepoint(event.pos):\n                        button.execute_action()\n                        if button.action != \"exit\":\n                            running = False\n\n        draw_gradient_background()\n        title_surf = font_large.render(\"Selecione o seu instrumento\", True, DARK_BLUE)\n        screen.blit(title_surf, (SCREEN_WIDTH // 2 - title_surf.get_width() // 2, 80))\n\n        for button in buttons:\n            button.check_hover(mouse_pos)\n            button.draw(screen)\n\n        pygame.display.flip()\n\n    pygame.quit()\n    sys.exit()\n\n\nif __name__ == \"__main__\":\n    while True:\n        instrument_menu()
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/TestesAnimacao/instrument_menu.py b/TestesAnimacao/instrument_menu.py
+--- a/TestesAnimacao/instrument_menu.py	(revision 7328e34e21a8e8e8c8e19c39fbc4326400bd1439)
++++ b/TestesAnimacao/instrument_menu.py	(date 1748217132598)
+@@ -74,10 +74,11 @@
+ 
+ def instrument_menu():
+     buttons = [
+-        Button(SCREEN_WIDTH // 2 - 150, 180, 300, 60, "Harmónica", "harmonica.py"),
+-        Button(SCREEN_WIDTH // 2 - 150, 260, 300, 60, "Gaita", "gaita.py"),
+-        Button(SCREEN_WIDTH // 2 - 150, 340, 300, 60, "Concertina", "concertina.py"),
+-        Button(SCREEN_WIDTH // 2 - 150, 420, 300, 60, "Triângulo", "triangulo.py")
++        Button(SCREEN_WIDTH // 2 - 150, 180, 300, 60, "Mapa", "Mapa.py"),
++        Button(SCREEN_WIDTH // 2 - 150, 260, 300, 60, "Harmónica", "harmonica.py"),
++        Button(SCREEN_WIDTH // 2 - 150, 340, 300, 60, "Gaita", "gaita.py"),
++        Button(SCREEN_WIDTH // 2 - 150, 420, 300, 60, "Concertina", "concertina.py"),
++        Button(SCREEN_WIDTH // 2 - 150, 500, 300, 60, "Triângulo", "triangulo.py")
+     ]
+ 
+     font_large = pygame.font.SysFont(None, 75)
+Index: TestesAnimacao/core/obj_reader.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>def my_obj_reader(filename: str) -> list:\n    \"\"\"Get the vertices from the OBJ file (considering v/vt/vn format).\"\"\"\n    position_list = list()\n    vertices = list()\n\n    with open(filename, 'r') as in_file:\n        for line in in_file:\n            if line.startswith('v '):\n                point = [float(value) for value in line.strip().split()[1:]]\n                vertices.append(point)\n            elif line.startswith('f'):\n                face_description = line.strip().split()[1:]\n                for value in face_description:\n                    vertex_index = int(value.split('/')[0]) - 1\n                    position_list.append(vertices[vertex_index])\n\n    return position_list\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/TestesAnimacao/core/obj_reader.py b/TestesAnimacao/core/obj_reader.py
+--- a/TestesAnimacao/core/obj_reader.py	(revision 7328e34e21a8e8e8c8e19c39fbc4326400bd1439)
++++ b/TestesAnimacao/core/obj_reader.py	(date 1748217132597)
+@@ -1,4 +1,4 @@
+-def my_obj_reader(filename: str) -> list:
++def my_obj_reader1(filename: str) -> list:
+     """Get the vertices from the OBJ file (considering v/vt/vn format)."""
+     position_list = list()
+     vertices = list()
+Index: .idea/workspace.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project version=\"4\">\n  <component name=\"AutoImportSettings\">\n    <option name=\"autoReloadType\" value=\"SELECTIVE\" />\n  </component>\n  <component name=\"ChangeListManager\">\n    <list default=\"true\" id=\"b12815cd-b211-49b2-89f2-9d4fe0412dcd\" name=\"Changes\" comment=\"\">\n      <change beforePath=\"$PROJECT_DIR$/.idea/workspace.xml\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/.idea/workspace.xml\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/TestesAnimacao/extras/movement_rig.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/TestesAnimacao/extras/movement_rig.py\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/TestesAnimacao/harmonica.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/TestesAnimacao/harmonica.py\" afterDir=\"false\" />\n    </list>\n    <option name=\"SHOW_DIALOG\" value=\"false\" />\n    <option name=\"HIGHLIGHT_CONFLICTS\" value=\"true\" />\n    <option name=\"HIGHLIGHT_NON_ACTIVE_CHANGELIST\" value=\"false\" />\n    <option name=\"LAST_RESOLUTION\" value=\"IGNORE\" />\n  </component>\n  <component name=\"Git.Settings\">\n    <option name=\"RECENT_BRANCH_BY_REPOSITORY\">\n      <map>\n        <entry key=\"$PROJECT_DIR$/Maestro_em_Treino\" value=\"main\" />\n      </map>\n    </option>\n    <option name=\"RECENT_GIT_ROOT_PATH\" value=\"$PROJECT_DIR$\" />\n  </component>\n  <component name=\"ProjectColorInfo\">{\n  &quot;associatedIndex&quot;: 7\n}</component>\n  <component name=\"ProjectId\" id=\"2xYs16MZu8jMfQ32zNnmYgBV4gO\" />\n  <component name=\"ProjectViewState\">\n    <option name=\"hideEmptyMiddlePackages\" value=\"true\" />\n    <option name=\"showLibraryContents\" value=\"true\" />\n  </component>\n  <component name=\"PropertiesComponent\">{\n  &quot;keyToString&quot;: {\n    &quot;Python.Mapa.executor&quot;: &quot;Run&quot;,\n    &quot;Python.ambient_light.executor&quot;: &quot;Run&quot;,\n    &quot;Python.concertina.executor&quot;: &quot;Run&quot;,\n    &quot;Python.custom.executor&quot;: &quot;Run&quot;,\n    &quot;Python.gaita.executor&quot;: &quot;Run&quot;,\n    &quot;Python.harmonica.executor&quot;: &quot;Run&quot;,\n    &quot;Python.harmonica_tutorial.executor&quot;: &quot;Run&quot;,\n    &quot;Python.instrument_menu.executor&quot;: &quot;Run&quot;,\n    &quot;Python.menu.executor&quot;: &quot;Run&quot;,\n    &quot;Python.movement_rig.executor&quot;: &quot;Run&quot;,\n    &quot;Python.triangulo.executor&quot;: &quot;Run&quot;,\n    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,\n    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,\n    &quot;git-widget-placeholder&quot;: &quot;merge&quot;,\n    &quot;last_opened_file_path&quot;: &quot;/home/nanashi/Desktop/CG_Projeto/Maestro_em_Treino/TestesAnimacao/instrumentos&quot;,\n    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;\n  }\n}</component>\n  <component name=\"RecentsManager\">\n    <key name=\"CopyFile.RECENT_KEYS\">\n      <recent name=\"$PROJECT_DIR$/Maestro_em_Treino/TestesAnimacao/instrumentos\" />\n      <recent name=\"$PROJECT_DIR$/Maestro_em_Treino/TestesAnimacao/images\" />\n      <recent name=\"$PROJECT_DIR$/Maestro_em_Treino/TestesAnimacao/extras\" />\n      <recent name=\"$PROJECT_DIR$/Maestro_em_Treino/TestesAnimacao/light\" />\n      <recent name=\"$PROJECT_DIR$/Maestro_em_Treino/TestesAnimacao\" />\n    </key>\n    <key name=\"MoveFile.RECENT_KEYS\">\n      <recent name=\"$PROJECT_DIR$/Maestro_em_Treino/TestesAnimacao/mapa_objs\" />\n    </key>\n  </component>\n  <component name=\"SharedIndexes\">\n    <attachedChunks>\n      <set>\n        <option value=\"bundled-python-sdk-4f4e415b4190-aa17d162503b-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-243.26053.29\" />\n      </set>\n    </attachedChunks>\n  </component>\n  <component name=\"SpellCheckerSettings\" RuntimeDictionaries=\"0\" Folders=\"0\" CustomDictionaries=\"0\" DefaultDictionary=\"application-level\" UseSingleDictionary=\"true\" transferred=\"true\" />\n  <component name=\"TaskManager\">\n    <task active=\"true\" id=\"Default\" summary=\"Default task\">\n      <changelist id=\"b12815cd-b211-49b2-89f2-9d4fe0412dcd\" name=\"Changes\" comment=\"\" />\n      <created>1748126122192</created>\n      <option name=\"number\" value=\"Default\" />\n      <option name=\"presentableId\" value=\"Default\" />\n      <updated>1748126122192</updated>\n    </task>\n    <servers />\n  </component>\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/workspace.xml b/.idea/workspace.xml
+--- a/.idea/workspace.xml	(revision 7328e34e21a8e8e8c8e19c39fbc4326400bd1439)
++++ b/.idea/workspace.xml	(date 1748217171847)
+@@ -5,9 +5,12 @@
+   </component>
+   <component name="ChangeListManager">
+     <list default="true" id="b12815cd-b211-49b2-89f2-9d4fe0412dcd" name="Changes" comment="">
+-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/TestesAnimacao/concertina.py" beforeDir="false" afterPath="$PROJECT_DIR$/TestesAnimacao/concertina.py" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/TestesAnimacao/core/obj_reader.py" beforeDir="false" afterPath="$PROJECT_DIR$/TestesAnimacao/core/obj_reader.py" afterDir="false" />
+       <change beforePath="$PROJECT_DIR$/TestesAnimacao/extras/movement_rig.py" beforeDir="false" afterPath="$PROJECT_DIR$/TestesAnimacao/extras/movement_rig.py" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/TestesAnimacao/harmonica.py" beforeDir="false" afterPath="$PROJECT_DIR$/TestesAnimacao/harmonica.py" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/TestesAnimacao/gaita.py" beforeDir="false" afterPath="$PROJECT_DIR$/TestesAnimacao/gaita.py" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/TestesAnimacao/instrument_menu.py" beforeDir="false" afterPath="$PROJECT_DIR$/TestesAnimacao/instrument_menu.py" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/TestesAnimacao/triangulo.py" beforeDir="false" afterPath="$PROJECT_DIR$/TestesAnimacao/triangulo.py" afterDir="false" />
+     </list>
+     <option name="SHOW_DIALOG" value="false" />
+     <option name="HIGHLIGHT_CONFLICTS" value="true" />
+@@ -30,26 +33,26 @@
+     <option name="hideEmptyMiddlePackages" value="true" />
+     <option name="showLibraryContents" value="true" />
+   </component>
+-  <component name="PropertiesComponent">{
+-  &quot;keyToString&quot;: {
+-    &quot;Python.Mapa.executor&quot;: &quot;Run&quot;,
+-    &quot;Python.ambient_light.executor&quot;: &quot;Run&quot;,
+-    &quot;Python.concertina.executor&quot;: &quot;Run&quot;,
+-    &quot;Python.custom.executor&quot;: &quot;Run&quot;,
+-    &quot;Python.gaita.executor&quot;: &quot;Run&quot;,
+-    &quot;Python.harmonica.executor&quot;: &quot;Run&quot;,
+-    &quot;Python.harmonica_tutorial.executor&quot;: &quot;Run&quot;,
+-    &quot;Python.instrument_menu.executor&quot;: &quot;Run&quot;,
+-    &quot;Python.menu.executor&quot;: &quot;Run&quot;,
+-    &quot;Python.movement_rig.executor&quot;: &quot;Run&quot;,
+-    &quot;Python.triangulo.executor&quot;: &quot;Run&quot;,
+-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+-    &quot;git-widget-placeholder&quot;: &quot;merge&quot;,
+-    &quot;last_opened_file_path&quot;: &quot;/home/nanashi/Desktop/CG_Projeto/Maestro_em_Treino/TestesAnimacao/instrumentos&quot;,
+-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
++  <component name="PropertiesComponent"><![CDATA[{
++  "keyToString": {
++    "Python.Mapa.executor": "Run",
++    "Python.ambient_light.executor": "Run",
++    "Python.concertina.executor": "Run",
++    "Python.custom.executor": "Run",
++    "Python.gaita.executor": "Run",
++    "Python.harmonica.executor": "Run",
++    "Python.harmonica_tutorial.executor": "Run",
++    "Python.instrument_menu.executor": "Run",
++    "Python.menu.executor": "Run",
++    "Python.movement_rig.executor": "Run",
++    "Python.triangulo.executor": "Run",
++    "RunOnceActivity.ShowReadmeOnStart": "true",
++    "RunOnceActivity.git.unshallow": "true",
++    "git-widget-placeholder": "Merging merge",
++    "last_opened_file_path": "/home/nanashi/Desktop/CG_Projeto/Maestro_em_Treino/TestesAnimacao/instrumentos",
++    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
+   }
+-}</component>
++}]]></component>
+   <component name="RecentsManager">
+     <key name="CopyFile.RECENT_KEYS">
+       <recent name="$PROJECT_DIR$/Maestro_em_Treino/TestesAnimacao/instrumentos" />
+Index: TestesAnimacao/triangulo.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import numpy as np\r\nimport math\r\nfrom core.base import Base\r\nfrom core_ext.camera import Camera\r\nfrom core_ext.mesh import Mesh\r\nfrom core_ext.renderer import Renderer\r\nfrom core_ext.scene import Scene\r\nfrom extras.axes import AxesHelper\r\nfrom extras.grid import GridHelper\r\nfrom extras.movement_rig import MovementRig\r\nfrom material.surface import SurfaceMaterial\r\nfrom core.obj_reader import my_obj_reader\r\nfrom core_ext.object3d import Object3D\r\nfrom core.customGeometry import customGeometry\r\n\r\nclass TriangleAnimation(Base):\r\n    def initialize(self):\r\n        print(\"Initializing triangle animation...\")\r\n        self.renderer = Renderer()\r\n        self.scene = Scene()\r\n        self.camera = Camera(aspect_ratio=800/600)\r\n        self.camera.set_position([0, 1, 5])\r\n\r\n        self.load_objects()\r\n\r\n        self.rig = MovementRig()\r\n        self.rig.add(self.triangle)\r\n        self.rig.add(self.drumstick)\r\n        self.rig.set_position([0, 0.5, 0])\r\n        self.scene.add(self.rig)\r\n\r\n        self.scene.add(AxesHelper(axis_length=2))\r\n        grid = GridHelper(size=20, grid_color=[1, 1, 1], center_color=[1, 1, 0])\r\n        grid.rotate_x(-math.pi/2)\r\n        self.scene.add(grid)\r\n\r\n        self.swing_angle = 0\r\n        self.swing_speed = 0\r\n        self.swing_damping = 0.97\r\n        self.max_swing_angle = math.pi / 6\r\n\r\n        self.drumstick_state = \"ready\"\r\n        self.hit_time = 0\r\n        self.drumstick_progress = 0\r\n\r\n    def load_objects(self):\r\n        triangle_vertices = my_obj_reader('instrumentos/triangulo.obj')\r\n        triangle_array = np.array(triangle_vertices)\r\n        highest_y = np.max(triangle_array[:, 1])\r\n        triangle_top_aligned = triangle_array.copy()\r\n        triangle_top_aligned[:, 1] -= highest_y\r\n\r\n        geometry = customGeometry(1, 1, 1, triangle_top_aligned.tolist())\r\n        material = SurfaceMaterial(property_dict={\"useVertexColors\": True})\r\n        self.triangle = Mesh(geometry, material)\r\n        self.triangle.set_position([0, 2, 0])\r\n\r\n        drumstick_vertices = my_obj_reader('instrumentos/baqueta.obj')\r\n        drumstick_centered = np.array(drumstick_vertices)\r\n        geometry = customGeometry(1, 1, 1, drumstick_centered.tolist())\r\n        material = SurfaceMaterial(property_dict={\"useVertexColors\": True})\r\n        self.drumstick = Mesh(geometry, material)\r\n        self.drumstick.set_position([1, 1, 0])\r\n        self.drumstick_initial_position = [1, 1, 0]\r\n\r\n    def hit_triangle(self):\r\n        self.drumstick_state = \"moving_forward\"\r\n        self.hit_time = self.time\r\n        self.drumstick_progress = 0\r\n        print(\"Triangle hit initiated\")\r\n\r\n    def update_drumstick(self):\r\n        if self.drumstick_state == \"moving_forward\":\r\n            self.drumstick_progress = min(1.0, (self.time - self.hit_time) / 0.4)\r\n\r\n            self.drumstick.set_position([\r\n                1 - self.drumstick_progress * 0.8,\r\n                1 - self.drumstick_progress * 0.4,\r\n                0\r\n            ])\r\n            self.drumstick.set_rotation([0, 0, -self.drumstick_progress * math.pi / 4])\r\n\r\n            if self.drumstick_progress >= 1.0:\r\n                self.drumstick_state = \"moving_back\"\r\n                self.hit_time = self.time\r\n                self.swing_speed = 0.04\r\n\r\n        elif self.drumstick_state == \"moving_back\":\r\n            self.drumstick_progress = min(1.0, (self.time - self.hit_time) / 0.4)\r\n\r\n            self.drumstick.set_position([\r\n                0.2 + self.drumstick_progress * 0.8,\r\n                0.6 + self.drumstick_progress * 0.4,\r\n                0\r\n            ])\r\n            self.drumstick.set_rotation([\r\n                0,\r\n                0,\r\n                -math.pi / 4 + self.drumstick_progress * math.pi / 4\r\n            ])\r\n\r\n            if self.drumstick_progress >= 1.0:\r\n                self.drumstick_state = \"swinging\"\r\n                self.drumstick.set_position(self.drumstick_initial_position)\r\n                self.drumstick.set_rotation([0, 0, 0])\r\n\r\n    def update_swing(self):\r\n        if self.drumstick_state in [\"moving_back\", \"swinging\"]:\r\n            self.swing_angle -= self.swing_speed\r\n            self.swing_speed *= self.swing_damping\r\n\r\n            if abs(self.swing_angle) > self.max_swing_angle:\r\n                self.swing_angle = self.max_swing_angle * np.sign(self.swing_angle)\r\n                self.swing_speed *= -0.5\r\n\r\n            if abs(self.swing_speed) < 0.001 and abs(self.swing_angle) < 0.01:\r\n                self.swing_angle = self.swing_angle * 0.8\r\n\r\n                if abs(self.swing_angle) < 0.001:\r\n                    self.swing_angle = 0\r\n                    self.drumstick_state = \"ready\"\r\n\r\n            self.triangle.set_rotation([0, 0, self.swing_angle])\r\n\r\n    def update(self):\r\n        self.rig.update(self.input, self.delta_time)\r\n\r\n        if self.input.is_key_pressed('h'):\r\n            self.hit_triangle()\r\n\r\n        if self.drumstick_state != \"ready\":\r\n            self.update_drumstick()\r\n            self.update_swing()\r\n\r\n        self.renderer.render(self.scene, self.camera)\r\n\r\nTriangleAnimation(screen_size=[800, 600]).run()\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/TestesAnimacao/triangulo.py b/TestesAnimacao/triangulo.py
+--- a/TestesAnimacao/triangulo.py	(revision 7328e34e21a8e8e8c8e19c39fbc4326400bd1439)
++++ b/TestesAnimacao/triangulo.py	(date 1748217132598)
+@@ -9,9 +9,23 @@
+ from extras.grid import GridHelper
+ from extras.movement_rig import MovementRig
+ from material.surface import SurfaceMaterial
+-from core.obj_reader import my_obj_reader
++from core.obj_reader import my_obj_reader1
+ from core_ext.object3d import Object3D
+ from core.customGeometry import customGeometry
++from light.ambient_light import AmbientLight
++from light.directional import DirectionalLight
++from material.lambert import LambertMaterial
++from extras.sun_light import SunLightHelper
++from extras.text_texture import TextTexture
++from material.texture import TextureMaterial
++from geometry.rectangle import RectangleGeometry
++from core.matrix import Matrix
++from geometry.sphere import SphereGeometry
++from material.phong import PhongMaterial
++from core_ext.audio import Audio
++from core_ext.texture import Texture
++from geometry.custom import CustomGeometry
++from core.obj_reader_harmonica import my_obj_reader 
+ 
+ class TriangleAnimation(Base):
+     def initialize(self):
+@@ -21,6 +35,8 @@
+         self.camera = Camera(aspect_ratio=800/600)
+         self.camera.set_position([0, 1, 5])
+ 
++        self.init_map()
++
+         self.load_objects()
+ 
+         self.rig = MovementRig()
+@@ -29,10 +45,10 @@
+         self.rig.set_position([0, 0.5, 0])
+         self.scene.add(self.rig)
+ 
+-        self.scene.add(AxesHelper(axis_length=2))
+-        grid = GridHelper(size=20, grid_color=[1, 1, 1], center_color=[1, 1, 0])
+-        grid.rotate_x(-math.pi/2)
+-        self.scene.add(grid)
++        # self.scene.add(AxesHelper(axis_length=2))
++        # grid = GridHelper(size=20, grid_color=[1, 1, 1], center_color=[1, 1, 0])
++        # grid.rotate_x(-math.pi/2)
++        # self.scene.add(grid)
+ 
+         self.swing_angle = 0
+         self.swing_speed = 0
+@@ -44,7 +60,12 @@
+         self.drumstick_progress = 0
+ 
+     def load_objects(self):
+-        triangle_vertices = my_obj_reader('instrumentos/triangulo.obj')
++        x = 0
++        y = 0
++        z = 0
++        angulo = 0
++
++        triangle_vertices = my_obj_reader1('instrumentos/triangulo.obj')
+         triangle_array = np.array(triangle_vertices)
+         highest_y = np.max(triangle_array[:, 1])
+         triangle_top_aligned = triangle_array.copy()
+@@ -53,13 +74,17 @@
+         geometry = customGeometry(1, 1, 1, triangle_top_aligned.tolist())
+         material = SurfaceMaterial(property_dict={"useVertexColors": True})
+         self.triangle = Mesh(geometry, material)
++        self.triangle.rotate_x(angulo)
++        self.triangle.set_position([x, y, z])
+         self.triangle.set_position([0, 2, 0])
+ 
+-        drumstick_vertices = my_obj_reader('instrumentos/baqueta.obj')
++        drumstick_vertices = my_obj_reader1('instrumentos/baqueta.obj')
+         drumstick_centered = np.array(drumstick_vertices)
+         geometry = customGeometry(1, 1, 1, drumstick_centered.tolist())
+         material = SurfaceMaterial(property_dict={"useVertexColors": True})
+         self.drumstick = Mesh(geometry, material)
++        self.drumstick.rotate_x(angulo)
++        self.drumstick.set_position([x, y, z])
+         self.drumstick.set_position([1, 1, 0])
+         self.drumstick_initial_position = [1, 1, 0]
+ 
+@@ -121,7 +146,516 @@
+                     self.drumstick_state = "ready"
+ 
+             self.triangle.set_rotation([0, 0, self.swing_angle])
++    def init_map(self):
++        n = 0
++        ambient_light = AmbientLight(color=[0.1 * n, 0.1 * n, 0.1 * n])
++        self.scene.add(ambient_light)
++
++        m = 1
++        self.directional_light = DirectionalLight(color=[0.8 * m, 0.8 * m, 0.8 * m], direction=[-1, -1, -2])
++        self.scene.add(self.directional_light)
++
++        self.sun_light_helper = SunLightHelper(self.directional_light, size=9)
++        self.sun_light_helper.set_position([0, 0, 11])
++
++        # self.directional_light.set_position([30, 30, 30])
++        # self.directional_light.set_direction([10, -1, -90])
++        # self.directional_light.set_position([70, 80, -95])
++        # self.directional_light.set_direction([0, -50, -90])
++
++        # self.directional_light.add(directional_light_helper)
++        self.directional_light.add(self.sun_light_helper)
++
++        self.renderer.enable_shadows(self.directional_light)
++
++        # --------------------------------------------------------------CEU-------------------------------------------------------------
++
++        sky_geometry = SphereGeometry(radius=250)
++        sky_material = TextureMaterial(texture=Texture(file_name="images/sky.jpg"))
++        sky = Mesh(sky_geometry, sky_material)
++        sky.rotate_y(2 * math.pi / 5)
++        self.scene.add(sky)
++
++        # -----------------------------------------------------------ALCATRAO-----------------------------------------------------------
++        vertices, tex_coords = my_obj_reader('mapa_objs/alcatrao.obj')
++
++        repeat_factor = 5.0
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++
++        alcatrao_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        alcatrao_material = LambertMaterial(
++            texture=Texture("images/Rubber004_4K-JPG_Color.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        alcatrao = Mesh(alcatrao_geometry, alcatrao_material)
++
++        self.scene.add(alcatrao)
++
++        # -----------------------------------------------------------PASSEIO-----------------------------------------------------------
++        vertices, tex_coords = my_obj_reader('mapa_objs/passeio.obj')
++
++        repeat_factor = 30
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++
++        passeio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        passeio_material = LambertMaterial(
++            texture=Texture("images/passeio.png"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        passeio = Mesh(passeio_geometry, passeio_material)
++
++        self.scene.add(passeio)
++
++        # -----------------------------------------------------------CALÇADA-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/calcada1.obj')
++
++        repeat_factor = 1
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++
++        calcada1_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        calcada1_material = LambertMaterial(
++            texture=Texture("images/calcada.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        calcada1 = Mesh(calcada1_geometry, calcada1_material)
++
++        self.scene.add(calcada1)
++        # -----------------------------------calçada2------------------------------------------
++        vertices, tex_coords = my_obj_reader('mapa_objs/calcada2.obj')
++
++        repeat_factor = 1
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++
++        calcada2_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        calcada2_material = LambertMaterial(
++            texture=Texture("images/calcada2.jpeg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        calcada2 = Mesh(calcada2_geometry, calcada2_material)
++
++        self.scene.add(calcada2)
++
++        # -----------------------------------calçada3------------------------------------------
++        vertices, tex_coords = my_obj_reader('mapa_objs/calcada3.obj')
++
++        repeat_factor = 1
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++
++        calcada3_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        calcada3_material = LambertMaterial(
++            texture=Texture("images/calcada.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        calcada3 = Mesh(calcada3_geometry, calcada3_material)
++
++        self.scene.add(calcada3)
++
++        # -----------------------------------calçada4------------------------------------------
++        vertices, tex_coords = my_obj_reader('mapa_objs/calcada4.obj')
++
++        repeat_factor = 1
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++
++        calcada4_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        calcada4_material = LambertMaterial(
++            texture=Texture("images/calcada3.jpeg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        calcada4 = Mesh(calcada4_geometry, calcada4_material)
++
++        self.scene.add(calcada4)
++
++        # -----------------------------------------------------------CERCA-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/cerca.obj')
++
++        repeat_factor = 1
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++
++        cerca_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        cerca_material = PhongMaterial(
++            texture=Texture("images/Metal029_4K-JPG_Color.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        cerca = Mesh(cerca_geometry, cerca_material)
++
++        self.scene.add(cerca)
++
++        # -----------------------------------------------------------FONTE-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/fonte.obj')
++
++        repeat_factor = 0.5
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++
++        fonte_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        fonte_material = PhongMaterial(
++            texture=Texture("images/stone.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        fonte = Mesh(fonte_geometry, fonte_material)
++
++        self.scene.add(fonte)
++
++        # -----------------------------------------------------------PALCO-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/palco.obj')
++
++        repeat_factor = 1
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++
++        palco_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        palco_material = PhongMaterial(
++            texture=Texture("images/fonte.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        palco = Mesh(palco_geometry, palco_material)
++
++        self.scene.add(palco)
++
++        # -----------------------------------------------------------Bancos-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/bancos.obj')
++
++        bancos_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        bancos_material = PhongMaterial(
++            texture=Texture("images/madeira2.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        bancos = Mesh(bancos_geometry, bancos_material)
++
++        self.scene.add(bancos)
++
++        # -----------------------------------------------------------PREDIO_1-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio1.obj')
++        repeat_factor = 5
+ 
++        tex_coords = [[u * repeat_factor, v / 3 * repeat_factor] for u, v in tex_coords]
++        predio1_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio1_material = PhongMaterial(
++            texture=Texture("images/predio1.jpeg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio1 = Mesh(predio1_geometry, predio1_material)
++
++        self.scene.add(predio1)
++
++        # -----------------------------------------------------------PREDIO_2-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio2.obj')
++        repeat_factor = 3
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++        predio2_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio2_material = PhongMaterial(
++            texture=Texture("images/predio2.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio2 = Mesh(predio2_geometry, predio2_material)
++
++        self.scene.add(predio2)
++
++        # -----------------------------------------------------------PREDIO_3-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio3.obj')
++        repeat_factor = 2
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++        predio3_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio3_material = PhongMaterial(
++            texture=Texture("images/predio3.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio3 = Mesh(predio3_geometry, predio3_material)
++
++        self.scene.add(predio3)
++
++        # -----------------------------------------------------------PREDIO_4-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio4.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 2.3 * repeat_factor] for u, v in tex_coords]
++        predio4_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio4_material = PhongMaterial(
++            texture=Texture("images/predio4.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio4 = Mesh(predio4_geometry, predio4_material)
++
++        self.scene.add(predio4)
++
++        # -----------------------------------------------------------PREDIO_5-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio5.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 1.5 * repeat_factor] for u, v in tex_coords]
++        predio5_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio5_material = PhongMaterial(
++            texture=Texture("images/predio6.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio5 = Mesh(predio5_geometry, predio5_material)
++
++        self.scene.add(predio5)
++
++        # -----------------------------------------------------------PREDIO_6-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio6.obj')
++        repeat_factor = 4
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++        predio4_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio4_material = PhongMaterial(
++            texture=Texture("images/predio5.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio4 = Mesh(predio4_geometry, predio4_material)
++
++        self.scene.add(predio4)
++
++        # -----------------------------------------------------------PREDIO_7-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio7.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 3 * repeat_factor] for u, v in tex_coords]
++        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio_material = PhongMaterial(
++            texture=Texture("images/predio7.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio = Mesh(predio_geometry, predio_material)
++
++        self.scene.add(predio)
++
++        # -----------------------------------------------------------PREDIO_8-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio8.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 2.3 * repeat_factor] for u, v in tex_coords]
++        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio_material = PhongMaterial(
++            texture=Texture("images/predio8.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio = Mesh(predio_geometry, predio_material)
++
++        self.scene.add(predio)
++
++        # -----------------------------------------------------------PREDIO_9-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio9.obj')
++        repeat_factor = 12
++
++        tex_coords = [[u * repeat_factor, v / 7 * repeat_factor] for u, v in tex_coords]
++        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio_material = PhongMaterial(
++            texture=Texture("images/predio9.jpeg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio = Mesh(predio_geometry, predio_material)
++
++        self.scene.add(predio)
++
++        # -----------------------------------------------------------PREDIO_10-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio10.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 3 * repeat_factor] for u, v in tex_coords]
++        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio_material = PhongMaterial(
++            texture=Texture("images/predio10.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio = Mesh(predio_geometry, predio_material)
++
++        self.scene.add(predio)
++
++        # -----------------------------------------------------------PREDIO_11-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio11.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 3 * repeat_factor] for u, v in tex_coords]
++        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio_material = PhongMaterial(
++            texture=Texture("images/predio7.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio = Mesh(predio_geometry, predio_material)
++
++        self.scene.add(predio)
++
++        # -----------------------------------------------------------PREDIO_12-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio12.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 4 * repeat_factor] for u, v in tex_coords]
++        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio_material = PhongMaterial(
++            texture=Texture("images/predio8.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio = Mesh(predio_geometry, predio_material)
++
++        self.scene.add(predio)
++
++        # -----------------------------------------------------------PREDIO_13-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio13.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 2.3 * repeat_factor] for u, v in tex_coords]
++        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio_material = PhongMaterial(
++            texture=Texture("images/predio4.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio = Mesh(predio_geometry, predio_material)
++
++        self.scene.add(predio)
++
++        # -----------------------------------------------------------PREDIO_14-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio14.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 2.3 * repeat_factor] for u, v in tex_coords]
++        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio_material = PhongMaterial(
++            texture=Texture("images/predio11.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio = Mesh(predio_geometry, predio_material)
++
++        self.scene.add(predio)
++
++        # -----------------------------------------------------------PREDIO_15-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio15.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 2.3 * repeat_factor] for u, v in tex_coords]
++        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio_material = PhongMaterial(
++            texture=Texture("images/predio4.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio = Mesh(predio_geometry, predio_material)
++
++        self.scene.add(predio)
++
++        # -----------------------------------------------------------LOJA-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/loja.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u / 1.66 * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++        loja_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        loja_material = PhongMaterial(
++            texture=Texture("images/predio_loja.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        loja = Mesh(loja_geometry, loja_material)
++
++        self.scene.add(loja)
++
++        self.directional_light.set_position([30, 30, 30])
++        self.directional_light.set_direction([10, -1, -90])
+     def update(self):
+         self.rig.update(self.input, self.delta_time)
+ 
+Index: TestesAnimacao/gaita.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import numpy as np\r\nimport math\r\nfrom core.base import Base\r\nfrom core_ext.camera import Camera\r\nfrom core_ext.mesh import Mesh\r\nfrom core_ext.renderer import Renderer\r\nfrom core_ext.scene import Scene\r\nfrom extras.axes import AxesHelper\r\nfrom extras.grid import GridHelper\r\nfrom extras.movement_rig import MovementRig\r\nfrom material.surface import SurfaceMaterial\r\nfrom core.obj_reader import my_obj_reader\r\nfrom core.customGeometry import customGeometry\r\nfrom core_ext.object3d import Object3D\r\n\r\nclass Example(Base):\r\n    def initialize(self):\r\n        print(\"Initializing program...\")\r\n        self.renderer = Renderer()\r\n        self.scene = Scene()\r\n\r\n        self.camera = Camera(aspect_ratio=800/600)\r\n        self.camera.set_position([0.5, 1, 5])\r\n        \r\n        tecido_vertices = my_obj_reader('instrumentos/tecido_gaita.obj')\r\n        tecido_vertices_array = np.array(tecido_vertices)\r\n        tecido_center = np.mean(tecido_vertices_array, axis=0)\r\n        centered_tecido_vertices = (tecido_vertices_array - tecido_center).tolist()\r\n        \r\n        tecido_geometry = customGeometry(1, 1, 1, centered_tecido_vertices)\r\n        tecido_material = SurfaceMaterial(property_dict={\"useVertexColors\": True, \"doubleSide\": True})\r\n        self.tecido_mesh = Mesh(tecido_geometry, tecido_material)\r\n\r\n        corpo_vertices = my_obj_reader('instrumentos/corpo_gaita.obj')\r\n        corpo_vertices_array = np.array(corpo_vertices)\r\n        centered_corpo_vertices = (corpo_vertices_array - tecido_center).tolist()\r\n        corpo_geometry = customGeometry(1, 1, 1, centered_corpo_vertices)\r\n        corpo_material = SurfaceMaterial(property_dict={\"useVertexColors\": True})\r\n        self.corpo_mesh = Mesh(corpo_geometry, corpo_material)\r\n\r\n        tubo_inferior_vertices = my_obj_reader('instrumentos/tubo_inferior.obj')\r\n        tubo_vertices_array = np.array(tubo_inferior_vertices)\r\n        centered_tubo_vertices = (tubo_vertices_array - tecido_center).tolist()\r\n        tubo_inferior_geometry = customGeometry(1, 1, 1, centered_tubo_vertices)\r\n        tubo_inferior_material = SurfaceMaterial(property_dict={\"useVertexColors\": True})\r\n        self.tubo_inferior_mesh = Mesh(tubo_inferior_geometry, tubo_inferior_material)\r\n        self.tubo_inferior_mesh.translate(0, -0.1, 0)\r\n        \r\n        self.tubo_inferior_rotation = 0\r\n        self.max_pendulum_angle = math.pi / 64\r\n\r\n        self.main_group = Object3D()\r\n        self.main_group.add(self.corpo_mesh)\r\n        self.main_group.add(self.tecido_mesh)\r\n        self.main_group.add(self.tubo_inferior_mesh)\r\n        \r\n        self.rig = MovementRig()\r\n        self.rig.add(self.main_group)\r\n        self.rig.set_position([0, 0.5, -0.5])\r\n        self.scene.add(self.rig)\r\n        \r\n        self.scene.add(AxesHelper(axis_length=2))\r\n        grid = GridHelper(size=20, grid_color=[1, 1, 1], center_color=[1, 1, 0])\r\n        grid.rotate_x(-math.pi / 2)\r\n        self.scene.add(grid)\r\n\r\n        self.animation_active = False\r\n        self.current_animation = None\r\n        self.animation_start_time = 0\r\n        self.animation_duration = 3.0\r\n        self.animation_speed = 1.5\r\n        \r\n        self.tecido_mesh.set_scale([1.0, 1.0, 1.0])\r\n        \r\n        self.animations = {\r\n            'm': {'type': 'inflate'}\r\n        }\r\n\r\n    def start_animation(self, key):\r\n        if key in self.animations:\r\n            self.animation_active = True\r\n            self.current_animation = key\r\n            self.animation_start_time = self.time\r\n            print(\"\\n--- Starting inflation animation ---\")\r\n\r\n    def smooth_movement(self, t):\r\n        \"\"\"Função para suavizar o movimento pendular\"\"\"\r\n        return math.sin(t * math.pi * 2) * (1 - math.exp(-5 * t)) * math.exp(-0.5 * t)\r\n\r\n    def update_animation(self, delta_time):\r\n        if not self.animation_active or not self.current_animation:\r\n            return\r\n\r\n        elapsed = (self.time - self.animation_start_time) * self.animation_speed\r\n        \r\n        if elapsed > self.animation_duration:\r\n            self.animation_active = False\r\n            self.tecido_mesh.set_scale([1.0, 1.0, 1.0])\r\n            self.tubo_inferior_rotation = 0\r\n            self.tubo_inferior_mesh.set_rotation([0, 0, 0])\r\n            print(\"Animation completed - reset to original state\")\r\n            return\r\n\r\n        progress = elapsed / self.animation_duration\r\n        \r\n        pendulum_factor = self.smooth_movement(progress)\r\n        \r\n        scale_factor = 1.0 + 0.05 * math.sin(progress * math.pi * 2)\r\n        \r\n        self.tecido_mesh.set_scale([scale_factor, scale_factor, scale_factor])\r\n        \r\n        self.tubo_inferior_rotation = pendulum_factor * self.max_pendulum_angle\r\n        self.tubo_inferior_mesh.set_rotation([0, 0, self.tubo_inferior_rotation])\r\n        \r\n        print(f\"Current scale: {scale_factor:.3f}, Pendulum angle: {math.degrees(self.tubo_inferior_rotation):.1f}°\")\r\n\r\n    def update(self):\r\n        self.rig.update(self.input, self.delta_time)\r\n\r\n        if self.input.is_key_pressed('m') and not self.animation_active:\r\n            self.start_animation('m')\r\n\r\n        self.update_animation(self.delta_time)\r\n        self.renderer.render(self.scene, self.camera)\r\n\r\nExample(screen_size=[800, 600]).run()\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/TestesAnimacao/gaita.py b/TestesAnimacao/gaita.py
+--- a/TestesAnimacao/gaita.py	(revision 7328e34e21a8e8e8c8e19c39fbc4326400bd1439)
++++ b/TestesAnimacao/gaita.py	(date 1748217132598)
+@@ -9,10 +9,23 @@
+ from extras.grid import GridHelper
+ from extras.movement_rig import MovementRig
+ from material.surface import SurfaceMaterial
+-from core.obj_reader import my_obj_reader
++from core.obj_reader import my_obj_reader1
+ from core.customGeometry import customGeometry
+ from core_ext.object3d import Object3D
+-
++from light.ambient_light import AmbientLight
++from light.directional import DirectionalLight
++from material.lambert import LambertMaterial
++from extras.sun_light import SunLightHelper
++from extras.text_texture import TextTexture
++from material.texture import TextureMaterial
++from geometry.rectangle import RectangleGeometry
++from core.matrix import Matrix
++from geometry.sphere import SphereGeometry
++from material.phong import PhongMaterial
++from core_ext.audio import Audio
++from core_ext.texture import Texture
++from geometry.custom import CustomGeometry
++from core.obj_reader_harmonica import my_obj_reader 
+ class Example(Base):
+     def initialize(self):
+         print("Initializing program...")
+@@ -22,7 +35,14 @@
+         self.camera = Camera(aspect_ratio=800/600)
+         self.camera.set_position([0.5, 1, 5])
+         
+-        tecido_vertices = my_obj_reader('instrumentos/tecido_gaita.obj')
++        self.init_map()
++
++        x = 0
++        y = 0
++        z = 0
++        angulo = 0
++
++        tecido_vertices = my_obj_reader1('instrumentos/tecido_gaita.obj')
+         tecido_vertices_array = np.array(tecido_vertices)
+         tecido_center = np.mean(tecido_vertices_array, axis=0)
+         centered_tecido_vertices = (tecido_vertices_array - tecido_center).tolist()
+@@ -30,20 +50,26 @@
+         tecido_geometry = customGeometry(1, 1, 1, centered_tecido_vertices)
+         tecido_material = SurfaceMaterial(property_dict={"useVertexColors": True, "doubleSide": True})
+         self.tecido_mesh = Mesh(tecido_geometry, tecido_material)
++        self.tecido_mesh.rotate_x(angulo)
++        self.tecido_mesh.set_position([x, y, z])
+ 
+-        corpo_vertices = my_obj_reader('instrumentos/corpo_gaita.obj')
++        corpo_vertices = my_obj_reader1('instrumentos/corpo_gaita.obj')
+         corpo_vertices_array = np.array(corpo_vertices)
+         centered_corpo_vertices = (corpo_vertices_array - tecido_center).tolist()
+         corpo_geometry = customGeometry(1, 1, 1, centered_corpo_vertices)
+         corpo_material = SurfaceMaterial(property_dict={"useVertexColors": True})
+         self.corpo_mesh = Mesh(corpo_geometry, corpo_material)
++        self.corpo_mesh.rotate_x(angulo)
++        self.corpo_mesh.set_position([x, y, z])
+ 
+-        tubo_inferior_vertices = my_obj_reader('instrumentos/tubo_inferior.obj')
++        tubo_inferior_vertices = my_obj_reader1('instrumentos/tubo_inferior.obj')
+         tubo_vertices_array = np.array(tubo_inferior_vertices)
+         centered_tubo_vertices = (tubo_vertices_array - tecido_center).tolist()
+         tubo_inferior_geometry = customGeometry(1, 1, 1, centered_tubo_vertices)
+         tubo_inferior_material = SurfaceMaterial(property_dict={"useVertexColors": True})
+         self.tubo_inferior_mesh = Mesh(tubo_inferior_geometry, tubo_inferior_material)
++        self.tubo_inferior_mesh.rotate_x(angulo)
++        self.tubo_inferior_mesh.set_position([x, y, z])
+         self.tubo_inferior_mesh.translate(0, -0.1, 0)
+         
+         self.tubo_inferior_rotation = 0
+@@ -59,10 +85,10 @@
+         self.rig.set_position([0, 0.5, -0.5])
+         self.scene.add(self.rig)
+         
+-        self.scene.add(AxesHelper(axis_length=2))
+-        grid = GridHelper(size=20, grid_color=[1, 1, 1], center_color=[1, 1, 0])
+-        grid.rotate_x(-math.pi / 2)
+-        self.scene.add(grid)
++        # self.scene.add(AxesHelper(axis_length=2))
++        # grid = GridHelper(size=20, grid_color=[1, 1, 1], center_color=[1, 1, 0])
++        # grid.rotate_x(-math.pi / 2)
++        # self.scene.add(grid)
+ 
+         self.animation_active = False
+         self.current_animation = None
+@@ -76,6 +102,516 @@
+             'm': {'type': 'inflate'}
+         }
+ 
++    def init_map(self):
++        n = 0
++        ambient_light = AmbientLight(color=[0.1 * n, 0.1 * n, 0.1 * n])
++        self.scene.add(ambient_light)
++
++        m = 1
++        self.directional_light = DirectionalLight(color=[0.8 * m, 0.8 * m, 0.8 * m], direction=[-1, -1, -2])
++        self.scene.add(self.directional_light)
++
++        self.sun_light_helper = SunLightHelper(self.directional_light, size=9)
++        self.sun_light_helper.set_position([0, 0, 11])
++
++        # self.directional_light.set_position([30, 30, 30])
++        # self.directional_light.set_direction([10, -1, -90])
++        # self.directional_light.set_position([70, 80, -95])
++        # self.directional_light.set_direction([0, -50, -90])
++
++        # self.directional_light.add(directional_light_helper)
++        self.directional_light.add(self.sun_light_helper)
++
++        self.renderer.enable_shadows(self.directional_light)
++
++        # --------------------------------------------------------------CEU-------------------------------------------------------------
++
++        sky_geometry = SphereGeometry(radius=250)
++        sky_material = TextureMaterial(texture=Texture(file_name="images/sky.jpg"))
++        sky = Mesh(sky_geometry, sky_material)
++        sky.rotate_y(2 * math.pi / 5)
++        self.scene.add(sky)
++
++        # -----------------------------------------------------------ALCATRAO-----------------------------------------------------------
++        vertices, tex_coords = my_obj_reader('mapa_objs/alcatrao.obj')
++
++        repeat_factor = 5.0
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++
++        alcatrao_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        alcatrao_material = LambertMaterial(
++            texture=Texture("images/Rubber004_4K-JPG_Color.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        alcatrao = Mesh(alcatrao_geometry, alcatrao_material)
++
++        self.scene.add(alcatrao)
++
++        # -----------------------------------------------------------PASSEIO-----------------------------------------------------------
++        vertices, tex_coords = my_obj_reader('mapa_objs/passeio.obj')
++
++        repeat_factor = 30
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++
++        passeio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        passeio_material = LambertMaterial(
++            texture=Texture("images/passeio.png"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        passeio = Mesh(passeio_geometry, passeio_material)
++
++        self.scene.add(passeio)
++
++        # -----------------------------------------------------------CALÇADA-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/calcada1.obj')
++
++        repeat_factor = 1
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++
++        calcada1_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        calcada1_material = LambertMaterial(
++            texture=Texture("images/calcada.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        calcada1 = Mesh(calcada1_geometry, calcada1_material)
++
++        self.scene.add(calcada1)
++        # -----------------------------------calçada2------------------------------------------
++        vertices, tex_coords = my_obj_reader('mapa_objs/calcada2.obj')
++
++        repeat_factor = 1
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++
++        calcada2_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        calcada2_material = LambertMaterial(
++            texture=Texture("images/calcada2.jpeg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        calcada2 = Mesh(calcada2_geometry, calcada2_material)
++
++        self.scene.add(calcada2)
++
++        # -----------------------------------calçada3------------------------------------------
++        vertices, tex_coords = my_obj_reader('mapa_objs/calcada3.obj')
++
++        repeat_factor = 1
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++
++        calcada3_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        calcada3_material = LambertMaterial(
++            texture=Texture("images/calcada.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        calcada3 = Mesh(calcada3_geometry, calcada3_material)
++
++        self.scene.add(calcada3)
++
++        # -----------------------------------calçada4------------------------------------------
++        vertices, tex_coords = my_obj_reader('mapa_objs/calcada4.obj')
++
++        repeat_factor = 1
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++
++        calcada4_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        calcada4_material = LambertMaterial(
++            texture=Texture("images/calcada3.jpeg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        calcada4 = Mesh(calcada4_geometry, calcada4_material)
++
++        self.scene.add(calcada4)
++
++        # -----------------------------------------------------------CERCA-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/cerca.obj')
++
++        repeat_factor = 1
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++
++        cerca_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        cerca_material = PhongMaterial(
++            texture=Texture("images/Metal029_4K-JPG_Color.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        cerca = Mesh(cerca_geometry, cerca_material)
++
++        self.scene.add(cerca)
++
++        # -----------------------------------------------------------FONTE-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/fonte.obj')
++
++        repeat_factor = 0.5
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++
++        fonte_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        fonte_material = PhongMaterial(
++            texture=Texture("images/stone.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        fonte = Mesh(fonte_geometry, fonte_material)
++
++        self.scene.add(fonte)
++
++        # -----------------------------------------------------------PALCO-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/palco.obj')
++
++        repeat_factor = 1
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++
++        palco_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        palco_material = PhongMaterial(
++            texture=Texture("images/fonte.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        palco = Mesh(palco_geometry, palco_material)
++
++        self.scene.add(palco)
++
++        # -----------------------------------------------------------Bancos-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/bancos.obj')
++
++        bancos_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        bancos_material = PhongMaterial(
++            texture=Texture("images/madeira2.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        bancos = Mesh(bancos_geometry, bancos_material)
++
++        self.scene.add(bancos)
++
++        # -----------------------------------------------------------PREDIO_1-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio1.obj')
++        repeat_factor = 5
++
++        tex_coords = [[u * repeat_factor, v / 3 * repeat_factor] for u, v in tex_coords]
++        predio1_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio1_material = PhongMaterial(
++            texture=Texture("images/predio1.jpeg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio1 = Mesh(predio1_geometry, predio1_material)
++
++        self.scene.add(predio1)
++
++        # -----------------------------------------------------------PREDIO_2-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio2.obj')
++        repeat_factor = 3
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++        predio2_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio2_material = PhongMaterial(
++            texture=Texture("images/predio2.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio2 = Mesh(predio2_geometry, predio2_material)
++
++        self.scene.add(predio2)
++
++        # -----------------------------------------------------------PREDIO_3-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio3.obj')
++        repeat_factor = 2
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++        predio3_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio3_material = PhongMaterial(
++            texture=Texture("images/predio3.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio3 = Mesh(predio3_geometry, predio3_material)
++
++        self.scene.add(predio3)
++
++        # -----------------------------------------------------------PREDIO_4-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio4.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 2.3 * repeat_factor] for u, v in tex_coords]
++        predio4_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio4_material = PhongMaterial(
++            texture=Texture("images/predio4.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio4 = Mesh(predio4_geometry, predio4_material)
++
++        self.scene.add(predio4)
++
++        # -----------------------------------------------------------PREDIO_5-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio5.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 1.5 * repeat_factor] for u, v in tex_coords]
++        predio5_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio5_material = PhongMaterial(
++            texture=Texture("images/predio6.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio5 = Mesh(predio5_geometry, predio5_material)
++
++        self.scene.add(predio5)
++
++        # -----------------------------------------------------------PREDIO_6-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio6.obj')
++        repeat_factor = 4
++
++        tex_coords = [[u * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++        predio4_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio4_material = PhongMaterial(
++            texture=Texture("images/predio5.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio4 = Mesh(predio4_geometry, predio4_material)
++
++        self.scene.add(predio4)
++
++        # -----------------------------------------------------------PREDIO_7-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio7.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 3 * repeat_factor] for u, v in tex_coords]
++        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio_material = PhongMaterial(
++            texture=Texture("images/predio7.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio = Mesh(predio_geometry, predio_material)
++
++        self.scene.add(predio)
++
++        # -----------------------------------------------------------PREDIO_8-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio8.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 2.3 * repeat_factor] for u, v in tex_coords]
++        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio_material = PhongMaterial(
++            texture=Texture("images/predio8.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio = Mesh(predio_geometry, predio_material)
++
++        self.scene.add(predio)
++
++        # -----------------------------------------------------------PREDIO_9-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio9.obj')
++        repeat_factor = 12
++
++        tex_coords = [[u * repeat_factor, v / 7 * repeat_factor] for u, v in tex_coords]
++        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio_material = PhongMaterial(
++            texture=Texture("images/predio9.jpeg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio = Mesh(predio_geometry, predio_material)
++
++        self.scene.add(predio)
++
++        # -----------------------------------------------------------PREDIO_10-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio10.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 3 * repeat_factor] for u, v in tex_coords]
++        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio_material = PhongMaterial(
++            texture=Texture("images/predio10.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio = Mesh(predio_geometry, predio_material)
++
++        self.scene.add(predio)
++
++        # -----------------------------------------------------------PREDIO_11-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio11.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 3 * repeat_factor] for u, v in tex_coords]
++        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio_material = PhongMaterial(
++            texture=Texture("images/predio7.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio = Mesh(predio_geometry, predio_material)
++
++        self.scene.add(predio)
++
++        # -----------------------------------------------------------PREDIO_12-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio12.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 4 * repeat_factor] for u, v in tex_coords]
++        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio_material = PhongMaterial(
++            texture=Texture("images/predio8.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio = Mesh(predio_geometry, predio_material)
++
++        self.scene.add(predio)
++
++        # -----------------------------------------------------------PREDIO_13-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio13.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 2.3 * repeat_factor] for u, v in tex_coords]
++        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio_material = PhongMaterial(
++            texture=Texture("images/predio4.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio = Mesh(predio_geometry, predio_material)
++
++        self.scene.add(predio)
++
++        # -----------------------------------------------------------PREDIO_14-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio14.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 2.3 * repeat_factor] for u, v in tex_coords]
++        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio_material = PhongMaterial(
++            texture=Texture("images/predio11.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio = Mesh(predio_geometry, predio_material)
++
++        self.scene.add(predio)
++
++        # -----------------------------------------------------------PREDIO_15-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/predio15.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u * repeat_factor, v / 2.3 * repeat_factor] for u, v in tex_coords]
++        predio_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        predio_material = PhongMaterial(
++            texture=Texture("images/predio4.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        predio = Mesh(predio_geometry, predio_material)
++
++        self.scene.add(predio)
++
++        # -----------------------------------------------------------LOJA-----------------------------------------------------------
++
++        vertices, tex_coords = my_obj_reader('mapa_objs/loja.obj')
++        repeat_factor = 8
++
++        tex_coords = [[u / 1.66 * repeat_factor, v * repeat_factor] for u, v in tex_coords]
++        loja_geometry = CustomGeometry(pos_d=vertices, uv=tex_coords)
++
++        loja_material = PhongMaterial(
++            texture=Texture("images/predio_loja.jpg"),
++            number_of_light_sources=2,
++            use_shadow=True
++        )
++
++        loja = Mesh(loja_geometry, loja_material)
++
++        self.scene.add(loja)
++
++        self.directional_light.set_position([30, 30, 30])
++        self.directional_light.set_direction([10, -1, -90])
+     def start_animation(self, key):
+         if key in self.animations:
+             self.animation_active = True

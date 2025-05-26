@@ -33,15 +33,17 @@ class ConcertinaAnimation(Base):
         self.renderer = Renderer()
         self.scene = Scene()
         self.camera = Camera(aspect_ratio=800/600)
-        self.camera.set_position([0, 1, 5])
+        self.camera.rotate_y(math.pi / 2)
+        self.camera.rotate_x(-math.pi / 7)
+        self.camera.set_position([27, 8, 0])
 
         self.base_fole_half_width = 2
 
         self.init_map()
 
         x = 0
-        y = 0
-        z = 0
+        y = 5.5
+        z = 25
         angulo = 0
 
         fole_v, fole_uv = my_obj_reader('instrumentos/fole.obj')
@@ -66,51 +68,50 @@ class ConcertinaAnimation(Base):
                                               esq_v[0:5375].tolist(),
                                               esq_uv[0:5375].tolist()), vermelho)
         self.sanfonaesq.rotate_x(angulo)
-        self.sanfonaesq.set_position([x, y, z])
+
         self.sanfonaver = Mesh(customGeometry(1, 1, 1,
                                               esq_v[5376:7801].tolist(),
                                               esq_uv[5376:7801].tolist()), escuro)
         self.sanfonaver.rotate_x(angulo)
-        self.sanfonaver.set_position([x, y, z])
+
         self.sanfonabra = Mesh(customGeometry(1, 1, 1,
                                               esq_v[7802:17280].tolist(),
                                               esq_uv[7802:17280].tolist()), branco1)
         self.sanfonabra.rotate_x(angulo)
-        self.sanfonabra.set_position([x, y, z])
 
-        self.sanfonaesq.set_position([0, 0, 0])
-        self.sanfonaver.set_position([0, 0, 0])
-        self.sanfonabra.set_position([0, 0, 0])
+
+        #self.sanfonaesq.set_position([0, 0, 0])
+        #self.sanfonaver.set_position([0, 0, 0])
+        #self.sanfonabra.set_position([0, 0, 0])
 
         dir_v, dir_uv = my_obj_reader('instrumentos/sanfonaesq.obj')
         dir_v = np.array(dir_v, dtype=np.float32)
         dir_uv = np.array(dir_uv, dtype=np.float32)
 
         preto = TextureMaterial(Texture("images/preto.jpg"))
-        print(f"Número total de vértices em 'esq': {len(esq_v) // 3}")
+        #print(f"Número total de vértices em 'esq': {len(esq_v) // 3}")
 
         self.sanfonadir = Mesh(customGeometry(1, 1, 1,
                                               dir_v[0:3623].tolist(),
                                               dir_uv[0:3623].tolist()), vermelho)
         self.sanfonadir.rotate_x(angulo)
-        self.sanfonadir.set_position([x, y, z])
         
         self.sanfonadirbra = Mesh(customGeometry(1, 1, 1,
                                                  dir_v[3624:4400].tolist(),
                                                  dir_uv[3624:4400].tolist()), preto)
         self.sanfonadirbra.rotate_x(angulo)
-        self.sanfonadirbra.set_position([x, y, z])
+
         self.sanfonadirpreto = Mesh(customGeometry(1, 1, 1,
                                                    dir_v[4401:9164].tolist(),
                                                    dir_uv[4401:9164].tolist()), branco1)
         self.sanfonadirpreto.rotate_x(angulo)
-        self.sanfonadirpreto.set_position([x, y, z])
 
-        self.sanfonadir.set_position([0, 0, 0])
-        self.sanfonadirbra.set_position([0, 0, 0])
-        self.sanfonadirpreto.set_position([0, 0, 0])
+        #self.sanfonadir.set_position([0, 0, 0])
+        #self.sanfonadirbra.set_position([0, 0, 0])
+       #self.sanfonadirpreto.set_position([0, 0, 0])
 
         self.rig = MovementRig()
+        self.rig.rotate_y(math.pi / 2)
         self.rig.add(self.fole)
         self.rig.add(self.sanfonaesq)
         self.rig.add(self.sanfonaver)
@@ -118,8 +119,18 @@ class ConcertinaAnimation(Base):
         self.rig.add(self.sanfonadir)
         self.rig.add(self.sanfonadirbra)
         self.rig.add(self.sanfonadirpreto)
-        self.rig.set_position([0, 0, 0])
+        #self.rig.set_position([0, 0, 0])
         self.scene.add(self.rig)
+
+        self.rig.disable_movement()
+
+        self.sanfonadirpreto.set_position([x, y, z])
+        self.sanfonadirbra.set_position([x, y, z])
+        self.sanfonadir.set_position([x, y, z])
+        self.sanfonabra.set_position([x, y, z])
+        self.sanfonaesq.set_position([x, y, z])
+        self.sanfonaver.set_position([x, y, z])
+        self.fole.set_position([x, y, z])
 
         # self.scene.add(AxesHelper(axis_length=2))
         # grid = GridHelper(size=20, grid_color=[1, 1, 1], center_color=[1, 1, 0])

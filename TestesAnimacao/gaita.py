@@ -33,12 +33,15 @@ class Example(Base):
         self.scene = Scene()
 
         self.camera = Camera(aspect_ratio=800/600)
-        self.camera.set_position([0.5, 1, 5])
-        
+        #self.camera.set_position([0.5, 1, 5])
+        self.camera.rotate_y(math.pi / 2)
+        self.camera.rotate_x(-math.pi / 7)
+        self.camera.set_position([27, 8, 0])
+
         self.init_map()
 
-        x = 0
-        y = 0
+        x = 26
+        y = 6
         z = 0
         angulo = 0
 
@@ -84,7 +87,9 @@ class Example(Base):
         self.rig.add(self.main_group)
         self.rig.set_position([0, 0.5, -0.5])
         self.scene.add(self.rig)
-        
+
+        self.rig.disable_movement()
+
         # self.scene.add(AxesHelper(axis_length=2))
         # grid = GridHelper(size=20, grid_color=[1, 1, 1], center_color=[1, 1, 0])
         # grid.rotate_x(-math.pi / 2)

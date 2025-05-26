@@ -34,7 +34,7 @@ class Example(Base):
         self.camera = Camera(aspect_ratio=800 / 600)
         self.camera.rotate_y(math.pi / 2)
         self.camera.rotate_x(-math.pi / 6)
-        self.camera.set_position([27, 6, 0])
+        self.camera.set_position([27, 8, 0])
         #self.rig2 = MovementRig()
         #self.rig2.add(self.camera)
         #self.scene.add(self.rig2)
@@ -110,8 +110,8 @@ class Example(Base):
         main_material = TextureMaterial(texture=main_texture, property_dict={"repeatUV": [7, 2]})
 #        main_material = TextureMaterial(texture=main_texture)
 
-        x = -20.7
-        y = -14.8
+        x = -22.1
+        y = -13.3
         z = 3
         angulo = 0
 

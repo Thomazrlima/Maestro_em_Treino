@@ -6,8 +6,10 @@
   <component name="ChangeListManager">
     <list default="true" id="b12815cd-b211-49b2-89f2-9d4fe0412dcd" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TestesAnimacao/extras/movement_rig.py" beforeDir="false" afterPath="$PROJECT_DIR$/TestesAnimacao/extras/movement_rig.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TestesAnimacao/concertina.py" beforeDir="false" afterPath="$PROJECT_DIR$/TestesAnimacao/concertina.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TestesAnimacao/gaita.py" beforeDir="false" afterPath="$PROJECT_DIR$/TestesAnimacao/gaita.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TestesAnimacao/harmonica.py" beforeDir="false" afterPath="$PROJECT_DIR$/TestesAnimacao/harmonica.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TestesAnimacao/triangulo.py" beforeDir="false" afterPath="$PROJECT_DIR$/TestesAnimacao/triangulo.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -21,6 +23,7 @@
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="UPDATE_TYPE" value="REBASE" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 7
