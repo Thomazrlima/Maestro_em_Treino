@@ -23,6 +23,9 @@ from core_ext.audio import Audio
 from core_ext.texture import Texture
 from menu import SCREEN_HEIGHT, SCREEN_WIDTH
 
+import subprocess
+import pygame
+import sys
 class Example(Base):
     def initialize(self):
         print("Initializing program...")
@@ -356,6 +359,12 @@ class Example(Base):
     def update(self):
         if self.label:
             self.label.look_at(self.camera.global_position)
+        
+        if self.input.is_key_down('return'):
+            print("Enter pressionado - voltando para o menu")
+
+            pygame.quit()
+            subprocess.run([sys.executable, "menu.py"])
         for key in self.animations:
             if self.input.is_key_pressed(key) and not self.animation_active:
                 if self.input.is_key_pressed('q'):

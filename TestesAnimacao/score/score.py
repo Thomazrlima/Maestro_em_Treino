@@ -6,13 +6,14 @@ class Score:
     def __init__(self):
         self.value = 0
 
-    def increment(self, amount=1):
+    def increment(self, amount=100):
         self.value += amount
         print(f"Score: {self.value}")
 
     def reset(self):
         self.value = 0
         print("Score reset.")
+        
 score = Score()
 
 def euclidean_rhythm(pulses, steps):
@@ -52,6 +53,7 @@ def euclidean_rhythm(pulses, steps):
         return pattern
 
     pattern = build(level)
+    pattern.reverse()
     return pattern[:steps]
 
 
@@ -63,8 +65,8 @@ def check_rhythm(input_sequence, pattern):
 
 
 if __name__ == "__main__":
-    pattern = euclidean_rhythm(3, 8)
+    pattern = euclidean_rhythm(4, 8)
     print("Pattern:", pattern)
-    test_seq = [1, 0, 0, 1, 0, 0, 1, 0]
+    test_seq = [1, 0, 1, 0, 1, 0, 1, 0]
     print("Match:", check_rhythm(test_seq, pattern))
     print("Final score:", score.value)

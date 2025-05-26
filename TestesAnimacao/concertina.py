@@ -26,7 +26,7 @@ from material.phong import PhongMaterial
 from core_ext.audio import Audio
 from core_ext.texture import Texture
 from geometry.custom import CustomGeometry
-from score.score import Score
+from score.score import Score, euclidean_rhythm, check_rhythm
 import subprocess
 import pygame
 import sys
@@ -181,6 +181,49 @@ class ConcertinaAnimation(Base):
         )
         self.audio.set_master_volume(0.05)
         self.keys = ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i']
+
+        self.score = Score()
+        self.euclideano = euclidean_rhythm(4, 8)
+        self.sequence_started = False
+        self.sequence_start_time = 0.0
+        self.sequence_last_checked_slot = 0
+        self.keys_in_slot = False
+        self.input_sequence = []
+
+        self.label_texture = TextTexture(text=f" Score: {self.score.value} ",
+                                         system_font_name="Comicsans MS",
+                                         font_size=35, font_color=[255, 180, 0],
+                                         image_width=600, image_height=128,
+                                         align_horizontal=0.5, align_vertical=0.5,
+                                         transparent=True)
+
+        self.label_material = TextureMaterial(self.label_texture)
+        self.label_geometry = RectangleGeometry(width=2, height=0.5)
+        self.label_geometry.apply_matrix(Matrix.make_rotation_y(np.pi/2))  # Rotate to face -z
+        self.label = Mesh(self.label_geometry, self.label_material)
+        self.label.set_position([23.5, 7.8, -1.9])
+        self.scene.add(self.label)
+
+    def checkScore(self, input_sequence):
+        if check_rhythm(input_sequence, self.euclideano):
+            self.score.increment()
+            self.scene.remove(self.label)
+
+            self.label_texture = TextTexture(text=f" Score: {self.score.value} ",
+                                         system_font_name="Comicsans MS",
+                                         font_size=35, font_color=[255, 180, 0],
+                                         image_width=600, image_height=128,
+                                         align_horizontal=0.5, align_vertical=0.5,
+                                         transparent=True)
+            self.label_material = TextureMaterial(self.label_texture)
+            self.label = Mesh(self.label_geometry, self.label_material)
+            self.label.set_position([23.5, 7.8, -1.9])
+            self.scene.add(self.label)
+            
+        self.sequence_started = False
+        self.sequence_last_checked_slot = 0
+        self.keys_in_slot = False
+        self.input_sequence = []
 
     def init_map(self):
         n = 0.5
@@ -696,8 +739,8 @@ class ConcertinaAnimation(Base):
     def update(self):
         self.rig.update(self.input, self.delta_time)
 
-        if self.input.is_key_down('z') and self.input.is_key_down('x') and not self.animation_active:
-            print("Z + X pressionados - voltando para o menu")
+        if self.input.is_key_down('return') and not self.animation_active:
+            print("Enter pressionado - voltando para o menu")
 
             pygame.quit()
             subprocess.run([sys.executable, "menu.py"])
@@ -706,6 +749,15 @@ class ConcertinaAnimation(Base):
             if self.input.is_key_pressed(key) and not self.animation_active:
                 self.animation_active = True
                 self.animation_elapsed = 0.0
+                if not self.sequence_started:
+                    self.sequence_started = True
+                    self.sequence_start_time = self.time
+                    self.sequence_last_checked_slot = 0
+                    self.keys_in_slot = True
+                    self.input_sequence = []
+                    print("Sequência de ritmo iniciada")
+                elif self.sequence_started and self.sequence_last_checked_slot <= 8:
+                    self.keys_in_slot = True
                 if self.input.is_key_down('q'):
                     print("Key 'q' pressed")
                     self.audio.play('blowQ')
@@ -775,6 +827,18 @@ class ConcertinaAnimation(Base):
             else:
                 scale_x = 1.0
                 half_width = 0.0
+
+        if self.sequence_started:
+            elapsed = self.time - self.sequence_start_time
+            current_slot = int(elapsed)
+            if current_slot > self.sequence_last_checked_slot and current_slot <= 8:
+                slot_val = 1 if self.keys_in_slot else 0
+                self.input_sequence.append(slot_val)
+                print(f"Slot {self.sequence_last_checked_slot + 1} → {slot_val}")
+                self.keys_in_slot = False
+                self.sequence_last_checked_slot = current_slot
+                if current_slot == 8:
+                    self.checkScore(self.input_sequence)
 
         self.fole.set_scale([scale_x, 1, 1])
         
