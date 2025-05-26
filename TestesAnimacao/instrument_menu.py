@@ -5,14 +5,6 @@ import os
 from core_ext.audio import Audio
 pygame.init()
 
-audio = Audio()
-audio.load(
-    name='elevator',
-    filepath='used_sounds/elevador.mp3'
-)
-audio.set_master_volume(3)
-audio.play(name='elevator')
-
 info = pygame.display.Info()
 SCREEN_WIDTH, SCREEN_HEIGHT = info.current_w, info.current_h
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -107,6 +99,14 @@ def load_images():
     return images
 
 def instrument_menu():
+    audio = Audio()
+    audio.load(
+        name='elevator',
+        filepath='used_sounds/elevador.mp3'
+    )
+    audio.set_master_volume(3)
+    audio.play(name='elevator')
+        
     buttons = [
         Button(SCREEN_WIDTH // 2 - 150, 180, 300, 60, "Mapa", "Mapa.py"),
         Button(SCREEN_WIDTH // 2 - 150, 260, 300, 60, "Harmónica", "harmonica.py"),

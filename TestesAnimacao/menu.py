@@ -4,13 +4,6 @@ import subprocess
 import os
 from core_ext.audio import Audio
 
-audio = Audio()
-audio.load(
-    name='elevator',
-    filepath='used_sounds/elevador.mp3'
-)
-audio.set_master_volume(3)
-audio.play(name='elevator')
 pygame.init()
 
 info = pygame.display.Info()
@@ -78,6 +71,13 @@ class Button:
                 print(f"Erro ao executar o script: {e}")
 
 def main_menu():
+    audio = Audio()
+    audio.load(
+        name='elevator',
+        filepath='used_sounds/elevador.mp3'
+    )
+    audio.set_master_volume(3)
+    audio.play(name='elevator')
     buttons = [
         Button(SCREEN_WIDTH // 2 - 150, 240, 300, 60, "Jogar", "instrument_menu.py"),
         Button(SCREEN_WIDTH // 2 - 150, 320, 300, 60, "Tutorial", "harmonica_tutorial.py"),
