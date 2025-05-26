@@ -157,6 +157,8 @@ class Example(Base):
 
         self.score = Score()
         self.euclideano = euclidean_rhythm(4, 8)
+        self.tresillo = euclidean_rhythm(3, 8)
+        self.cinquillo  = euclidean_rhythm(5, 8)
         self.sequence_started = False
         self.sequence_start_time = 0.0
         self.sequence_last_checked_slot = 0
@@ -178,7 +180,7 @@ class Example(Base):
         self.scene.add(self.label)
 
     def checkScore(self, input_sequence):
-        if check_rhythm(input_sequence, self.euclideano):
+        if check_rhythm(input_sequence, self.euclideano) or check_rhythm(input_sequence, self.tresillo) or check_rhythm(input_sequence, self.cinquillo):
             self.score.increment()
             self.scene.remove(self.label)
 

@@ -567,7 +567,7 @@ class Example(Base):
 
 
     def update(self):
-        if self.input.is_key_down('return') and not self.animation_active:
+        if self.input.is_key_down('return'):
             print("Enter pressionado - voltando para o menu")
 
             pygame.quit()
