@@ -6,15 +6,34 @@
   <component name="ChangeListManager">
     <list default="true" id="b12815cd-b211-49b2-89f2-9d4fe0412dcd" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TestesAnimacao/Mapa.py" beforeDir="false" afterPath="$PROJECT_DIR$/TestesAnimacao/Mapa.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TestesAnimacao/concertina.py" beforeDir="false" afterPath="$PROJECT_DIR$/TestesAnimacao/concertina.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TestesAnimacao/extras/sun_light.py" beforeDir="false" afterPath="$PROJECT_DIR$/TestesAnimacao/extras/sun_light.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TestesAnimacao/gaita.py" beforeDir="false" afterPath="$PROJECT_DIR$/TestesAnimacao/gaita.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/TestesAnimacao/harmonica.py" beforeDir="false" afterPath="$PROJECT_DIR$/TestesAnimacao/harmonica.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TestesAnimacao/instrumentos/baqueta.mtl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/TestesAnimacao/instrumentos/corpo_gaita.mtl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/TestesAnimacao/instrumentos/fole.mtl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/TestesAnimacao/instrumentos/harmonic.mtl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/TestesAnimacao/instrumentos/harmonic1.mtl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/TestesAnimacao/instrumentos/sanfonadir.mtl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/TestesAnimacao/instrumentos/sanfonaesq.mtl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/TestesAnimacao/instrumentos/tecido_gaita.mtl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/TestesAnimacao/instrumentos/triangulo.mtl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/TestesAnimacao/instrumentos/tubo_inferior.mtl" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/TestesAnimacao/triangulo.py" beforeDir="false" afterPath="$PROJECT_DIR$/TestesAnimacao/triangulo.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
@@ -45,6 +64,7 @@
     &quot;Python.instrument_menu.executor&quot;: &quot;Run&quot;,
     &quot;Python.menu.executor&quot;: &quot;Run&quot;,
     &quot;Python.movement_rig.executor&quot;: &quot;Run&quot;,
+    &quot;Python.sun_light.executor&quot;: &quot;Run&quot;,
     &quot;Python.triangulo.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
