@@ -60,7 +60,7 @@ class Example(Base):
         corpo_vertices_array = np.array(corpo_vertices)
         centered_corpo_vertices = (corpo_vertices_array - tecido_center).tolist()
         corpo_geometry = customGeometry(1, 1, 1, centered_corpo_vertices)
-        corpo_material = SurfaceMaterial(property_dict={"useVertexColors": True})
+        corpo_material = PhongMaterial("")
         self.corpo_mesh = Mesh(corpo_geometry, corpo_material)
         self.corpo_mesh.rotate_x(angulo)
         self.corpo_mesh.set_position([x, y, z])
