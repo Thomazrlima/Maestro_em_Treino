@@ -142,7 +142,7 @@ class ConcertinaAnimation(Base):
         self.rig.disable_movement()
 
         self.animation_active = False
-        self.animation_duration = 2.0
+        self.animation_duration = 5.0
         self.animation_elapsed = 0.0
         self.max_scale = 2.8
 
